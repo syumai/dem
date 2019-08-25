@@ -1,0 +1,10 @@
+{
+  "name": "dem",
+  "version": "0.1.0",
+  "main": "index.js",
+  "author": "syumai",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^3.5.3"
+  }
+}
