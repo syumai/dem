@@ -2,9 +2,10 @@
 
 - A module version manager for Deno.
 - dem creates versioned aliases of modules.
+  - alias files are stored in `vendor` directory.
 - modules managed by dem can be easily updated using `dem update`.
 
-#### Example
+#### Example of alias file
 
 - vendor/https/deno.land/x/dejs/mod.ts
 
