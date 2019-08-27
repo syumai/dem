@@ -39,7 +39,7 @@ dem prune (WIP)                            // remove unused in modules and alias
 - Modules can be accessed using relative path without module version.
 
 ```ts
-import { dejs } from '../../vendor/https/deno.land/x/dejs/mod.ts';
+import * as dejs from '../../vendor/https/deno.land/x/dejs/mod.ts';
 ```
 
 ## Status
