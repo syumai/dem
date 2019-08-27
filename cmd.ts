@@ -1,5 +1,4 @@
 const { args } = Deno;
-import { parse } from './vendor/https/deno.land/std/flags/mod.ts';
 import * as dem from './mod.ts';
 
 export const version = '0.1.0';
@@ -13,6 +12,7 @@ enum SubCommandType {
   Remove = 'remove',
   Unlink = 'unlink',
   Ensure = 'ensure',
+  Prune = 'prune',
 }
 
 function isSubCommandType(t: string): t is SubCommandType {
@@ -44,11 +44,17 @@ async function main(): Promise<void> {
     case SubCommandType.Update:
       dem.update(defaultConfigFilePath, args[2]);
       break;
+    case SubCommandType.Unlink:
+      dem.unlink(defaultConfigFilePath, args[2]);
+      break;
     case SubCommandType.Remove:
-      // dem.remove();
+      dem.remove(defaultConfigFilePath, args[2]);
       break;
     case SubCommandType.Ensure:
       // dem.ensure();
+      break;
+    case SubCommandType.Prune:
+      // dem.prune();
       break;
   }
 }
