@@ -2,6 +2,7 @@
 
 - A module version manager for Deno.
 - dem creates versioned aliases of modules.
+- modules managed by dem can be easily updated using `dem update`.
 
 #### Example
 
