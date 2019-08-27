@@ -6,7 +6,8 @@
       "path": "deno.land/std",
       "version": "v0.15.0",
       "files": [
-        "/flags/mod.ts"
+        "/flags/mod.ts",
+        "/fs/path.ts"
       ]
     }
   ]
