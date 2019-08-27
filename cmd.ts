@@ -1,15 +1,17 @@
 const { args } = Deno;
-import { parse } from 'https://deno.land/std/flags/mod.ts';
-import { Dem } from './mod.ts';
+import { parse } from './vendor/https/deno.land/std/flags/mod.ts';
+import * as dem from './mod.ts';
 
 export const version = '0.1.0';
+const defaultConfigFilePath = 'dem.json';
 
 enum SubCommandType {
   Init = 'init',
   Add = 'add',
-  Get = 'get',
+  Link = 'link',
   Update = 'update',
   Remove = 'remove',
+  Unlink = 'unlink',
   Ensure = 'ensure',
 }
 
@@ -34,19 +36,18 @@ async function main(): Promise<void> {
     return;
   }
   // const parsedArgs = parse(args.slice(2));
-  const dem = new Dem(version);
   switch (subCmdType) {
     case SubCommandType.Init:
-      dem.init();
+      dem.init(version, defaultConfigFilePath);
       break;
     case SubCommandType.Add:
-      dem.add(args[2]);
+      dem.add(defaultConfigFilePath, args[2]);
       break;
-    case SubCommandType.Get:
-      dem.get(args[2]);
+    case SubCommandType.Link:
+      dem.link(defaultConfigFilePath, args[2]);
       break;
     case SubCommandType.Update:
-      dem.update(args[2]);
+      dem.update(defaultConfigFilePath, args[2]);
       break;
     case SubCommandType.Remove:
       // dem.remove();

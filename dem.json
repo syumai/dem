@@ -3,10 +3,10 @@
   "modules": [
     {
       "protocol": "https",
-      "path": "deno.land/x/dejs",
-      "version": "0.4.0",
+      "path": "deno.land/std",
+      "version": "v0.15.0",
       "files": [
-        "/mod.ts"
+        "/flags/mod.ts"
       ]
     }
   ]

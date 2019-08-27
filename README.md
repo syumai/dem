@@ -1,10 +1,15 @@
 # dem
 
-- A module manager for Deno.
+- A module version manager for Deno.
+- dem creates versioned aliases of modules.
 
-## Status
+#### Example
 
-WIP
+- vendor/https/deno.land/x/dejs/mod.ts
+
+```ts
+export * from 'https://deno.land/x/dejs@0.1.0/mod.ts';
+```
 
 ## Usage
 
@@ -17,12 +22,14 @@ deno install dem https://denopkg.com/syumai/dem/cmd.ts --allow-read --allow-writ
 ### Commands
 
 ```console
-dem init                                  // initialize denomod.ts
-dem add https://deno.land/x/dejs@0.1.0    // add module `dejs` and set its version to `0.1.0`
-dem get https://deno.land/x/dejs/mod.ts   // get `mod.ts` which is controlled by dem, and put it in vendor directory.
-dem update https://deno.land/x/dejs@0.2.0 // update module to `0.2.0`
-dem remove https://deno.land/x/dejs (WIP) // remove module `dejs`
-dem ensure (WIP)                          // resolve modules used in project and download them
+dem init                                   // initialize dem.json
+dem add https://deno.land/x/dejs@0.1.0     // add module `dejs` and set its version to `0.1.0`
+dem link https://deno.land/x/dejs/mod.ts   // create alias of `dejs@0.1.0/mod.ts` and put it into vendor directory.
+dem update https://deno.land/x/dejs@0.2.0  // update module to `0.2.0`
+dem remove https://deno.land/x/dejs (WIP)  // remove module `dejs`
+dem unlink https://deno.land/x/dejs/mod.ts // remove alias of `dejs@0.2.0/mod.ts`.
+dem ensure (WIP)                           // resolve modules used in project and download them.
+dem prune (WIP)                            // remove unused in modules and aliases.
 ```
 
 ### Use modules
@@ -32,6 +39,10 @@ dem ensure (WIP)                          // resolve modules used in project and
 ```ts
 import { dejs } from '../../vendor/https/deno.land/x/dejs/mod.ts';
 ```
+
+## Status
+
+WIP
 
 ## Author
 
