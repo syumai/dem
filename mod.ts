@@ -1,7 +1,7 @@
-const { mkdir, writeFile } = Deno;
+const { mkdir, writeFile, remove: removeFile } = Deno;
 
 import { getConfig, saveConfig, Config } from './config.ts';
-import { moduleEquals, parseModule } from './module.ts';
+import { moduleEquals, parseModule, Module } from './module.ts';
 import * as path from './vendor/https/deno.land/std/fs/path.ts';
 
 const vendorDirectoryPath = 'vendor';
@@ -48,9 +48,7 @@ to update module, please use 'dem update'.`);
   config.modules.sort((modA, modB) => modA.path.localeCompare(modB.path));
   await saveConfig(config, configFilePath);
   console.log(
-    `successfully added new module: ${addedMod.protocol}://${
-      addedMod.path
-    }, version: ${addedMod.version}`
+    `successfully added new module: ${addedMod.protocol}://${addedMod.path}, version: ${addedMod.version}`
   );
 }
 
@@ -74,11 +72,7 @@ export async function link(
   }
 
   const filePath = urlStr.split(`${foundMod.protocol}://${foundMod.path}`)[1];
-  // FIXME: use fs/path module
-  const directoryPath = filePath
-    .split('/')
-    .slice(0, -1)
-    .join('/');
+  const directoryPath = path.dirname(filePath);
   const enc = new TextEncoder();
   const fp = path.join(
     vendorDirectoryPath,
@@ -92,9 +86,7 @@ export async function link(
     foundMod.path,
     directoryPath
   );
-  const script = `export * from '${foundMod.protocol}://${foundMod.path}@${
-    foundMod.version
-  }${filePath}';\n`;
+  const script = `export * from '${foundMod.protocol}://${foundMod.path}@${foundMod.version}${filePath}';\n`;
 
   await mkdir(dp, true);
   await writeFile(fp, enc.encode(script));
@@ -106,9 +98,7 @@ export async function link(
   }
 
   console.log(
-    `successfully created alias: ${foundMod.protocol}://${foundMod.path}@${
-      foundMod.version
-    }${filePath}`
+    `successfully created alias: ${foundMod.protocol}://${foundMod.path}@${foundMod.version}${filePath}`
   );
 }
 
@@ -142,17 +132,111 @@ export async function update(
       foundMod.path,
       filePath
     );
-    const script = `export * from '${updatedMod.protocol}://${
-      updatedMod.path
-    }@${updatedMod.version}${filePath}';`;
+    const script = `export * from '${updatedMod.protocol}://${updatedMod.path}@${updatedMod.version}${filePath}';`;
     await writeFile(fp, enc.encode(script));
   }
   foundMod.version = updatedMod.version;
 
   await saveConfig(config, configFilePath);
   console.log(
-    `successfully updated module: ${updatedMod.protocol}://${
-      updatedMod.path
-    }, version: ${updatedMod.version}`
+    `successfully updated module: ${updatedMod.protocol}://${updatedMod.path}, version: ${updatedMod.version}`
   );
+}
+
+export async function unlink(
+  configFilePath: string,
+  urlStr: string
+): Promise<void> {
+  // Validate added module.
+  const config = await getConfig(configFilePath);
+  if (!config) {
+    console.error(`failed to get config: ${configFilePath}`);
+    return;
+  }
+  const foundMod = config.modules.find(mod => {
+    const prefix = `${mod.protocol}://${mod.path}`;
+    return urlStr.startsWith(prefix);
+  });
+  if (!foundMod) {
+    console.error(`module not found for: ${urlStr}`);
+    return;
+  }
+
+  // Remove aliases
+  const filePath = urlStr.split(`${foundMod.protocol}://${foundMod.path}`)[1];
+  const fp = path.join(
+    vendorDirectoryPath,
+    foundMod.protocol,
+    foundMod.path,
+    filePath
+  );
+
+  const foundFileIndex = foundMod.files.indexOf(filePath);
+  if (foundFileIndex < 0) {
+    console.error(`file not found: ${filePath}`);
+    return;
+  }
+
+  try {
+    await removeFile(fp, { recursive: false });
+  } catch (e) {
+    console.error(`failed to remove file: ${fp}`);
+    console.error(e);
+    return;
+  }
+
+  // Update config.
+  foundMod.files.splice(foundFileIndex, 1);
+  await saveConfig(config, configFilePath);
+  console.log(`successfully removed alias: ${urlStr}`);
+}
+
+export async function remove(
+  configFilePath: string,
+  urlStr: string
+): Promise<void> {
+  // Validate added module.
+  const config = await getConfig(configFilePath);
+  if (!config) {
+    console.error(`failed to get config: ${configFilePath}`);
+    return;
+  }
+  let foundModIndex = 0;
+  let foundMod: Module;
+  for (const mod of config.modules) {
+    const prefix = `${mod.protocol}://${mod.path}`;
+    if (urlStr.startsWith(prefix)) {
+      foundMod = mod;
+      break;
+    }
+    foundModIndex++;
+  }
+  if (!foundMod) {
+    console.error(`module not found for: ${urlStr}`);
+    return;
+  }
+
+  // Remove aliases
+  const filePath = urlStr.split(`${foundMod.protocol}://${foundMod.path}`)[1];
+  const directoryPath = path.dirname(filePath);
+  const dp = path.join(
+    vendorDirectoryPath,
+    foundMod.protocol,
+    foundMod.path,
+    directoryPath
+  );
+  // TODO: remove parent's blank directories recursive up to vendor
+
+  try {
+    await removeFile(dp, { recursive: true });
+  } catch (e) {
+    console.error(`failed to remove directory: ${dp}`);
+    console.error(e);
+    return;
+  }
+
+  // Update config.
+  config.modules.splice(foundModIndex, 1);
+  await saveConfig(config, configFilePath);
+  console.log(`successfully removed module: ${urlStr}`);
 }
