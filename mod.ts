@@ -1,14 +1,10 @@
 const { mkdir, writeFile } = Deno;
 
 import { getConfig, saveConfig, Config } from './config.ts';
-import { Module, moduleEquals, parseModule } from './module.ts';
+import { moduleEquals, parseModule } from './module.ts';
 import * as path from './vendor/https/deno.land/std/fs/path.ts';
 
 const vendorDirectoryPath = 'vendor';
-
-function findModule(modules: Module[], targetMod: Module): Module | undefined {
-  return modules.find(mod => moduleEquals(mod, targetMod));
-}
 
 export async function init(
   version: string,

@@ -16,12 +16,7 @@ enum SubCommandType {
 }
 
 function isSubCommandType(t: string): t is SubCommandType {
-  for (const value of Object.values(SubCommandType)) {
-    if (value === t) {
-      return true;
-    }
-  }
-  return false;
+  return Object.values(SubCommandType).includes(t);
 }
 
 async function main(): Promise<void> {
