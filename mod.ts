@@ -45,10 +45,12 @@ to update module, please use 'dem update'.`);
   // Update config.
   config.modules.push(addedMod);
   // NOTE: is it correct to use localeCompare here?
-  config.modules.sort((modA, modB) => modA.path.localeCompare(modB.path));
+  config.modules.sort((modA, modB) => modA.compare(modB));
   await saveConfig(config, configFilePath);
   console.log(
-    `successfully added new module: ${addedMod.protocol}://${addedMod.path}, version: ${addedMod.version}`
+    `successfully added new module: ${addedMod.toString()}, version: ${
+      addedMod.version
+    }`
   );
 }
 
@@ -63,15 +65,14 @@ export async function link(
     return;
   }
   const foundMod = config.modules.find(mod => {
-    const prefix = `${mod.protocol}://${mod.path}`;
-    return urlStr.startsWith(prefix);
+    return urlStr.startsWith(mod.toString());
   });
   if (!foundMod) {
     console.error(`module not found for: ${urlStr}`);
     return;
   }
 
-  const filePath = urlStr.split(`${foundMod.protocol}://${foundMod.path}`)[1];
+  const filePath = urlStr.split(foundMod.toString())[1];
   const directoryPath = path.dirname(filePath);
   const enc = new TextEncoder();
   const fp = path.join(
@@ -86,7 +87,7 @@ export async function link(
     foundMod.path,
     directoryPath
   );
-  const script = `export * from '${foundMod.protocol}://${foundMod.path}@${foundMod.version}${filePath}';\n`;
+  const script = `export * from '${foundMod.toStringWithVersion()}${filePath}';\n`;
 
   await mkdir(dp, true);
   await writeFile(fp, enc.encode(script));
@@ -98,7 +99,7 @@ export async function link(
   }
 
   console.log(
-    `successfully created alias: ${foundMod.protocol}://${foundMod.path}@${foundMod.version}${filePath}`
+    `successfully created alias: ${foundMod.toStringWithVersion()}${filePath}`
   );
 }
 
@@ -132,14 +133,16 @@ export async function update(
       foundMod.path,
       filePath
     );
-    const script = `export * from '${updatedMod.protocol}://${updatedMod.path}@${updatedMod.version}${filePath}';`;
+    const script = `export * from '${updatedMod.toStringWithVersion()}${filePath}';`;
     await writeFile(fp, enc.encode(script));
   }
   foundMod.version = updatedMod.version;
 
   await saveConfig(config, configFilePath);
   console.log(
-    `successfully updated module: ${updatedMod.protocol}://${updatedMod.path}, version: ${updatedMod.version}`
+    `successfully updated module: ${updatedMod.toString()}, version: ${
+      updatedMod.version
+    }`
   );
 }
 
@@ -154,8 +157,7 @@ export async function unlink(
     return;
   }
   const foundMod = config.modules.find(mod => {
-    const prefix = `${mod.protocol}://${mod.path}`;
-    return urlStr.startsWith(prefix);
+    return urlStr.startsWith(mod.toString());
   });
   if (!foundMod) {
     console.error(`module not found for: ${urlStr}`);
@@ -163,7 +165,7 @@ export async function unlink(
   }
 
   // Remove aliases
-  const filePath = urlStr.split(`${foundMod.protocol}://${foundMod.path}`)[1];
+  const filePath = urlStr.split(foundMod.toString())[1];
   const fp = path.join(
     vendorDirectoryPath,
     foundMod.protocol,
@@ -195,7 +197,7 @@ export async function remove(
   configFilePath: string,
   urlStr: string
 ): Promise<void> {
-  // Validate added module.
+  // Validate module to remove.
   const config = await getConfig(configFilePath);
   if (!config) {
     console.error(`failed to get config: ${configFilePath}`);
@@ -204,8 +206,7 @@ export async function remove(
   let foundModIndex = 0;
   let foundMod: Module;
   for (const mod of config.modules) {
-    const prefix = `${mod.protocol}://${mod.path}`;
-    if (urlStr.startsWith(prefix)) {
+    if (urlStr.startsWith(mod.toString())) {
       foundMod = mod;
       break;
     }
@@ -217,7 +218,7 @@ export async function remove(
   }
 
   // Remove aliases
-  const filePath = urlStr.split(`${foundMod.protocol}://${foundMod.path}`)[1];
+  const filePath = urlStr.split(foundMod.toString())[1];
   const directoryPath = path.dirname(filePath);
   const dp = path.join(
     vendorDirectoryPath,
@@ -240,3 +241,8 @@ export async function remove(
   await saveConfig(config, configFilePath);
   console.log(`successfully removed module: ${urlStr}`);
 }
+
+export async function ensure(
+  configFilePath: string,
+  urlStr: string
+): Promise<void> {}
