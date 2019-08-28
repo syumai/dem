@@ -23,31 +23,25 @@ function validateConfig(config: any) {
   config.modules.forEach((mod, i) => {
     if (!mod.protocol || !mod.path || !mod.version || !mod.files) {
       throw new Error(
-        `module format is invalid. index: ${i}, protocol: ${
-          mod.protocol
-        }, path: ${mod.path}, version: ${mod.version}`
+        `module format is invalid. index: ${i}, protocol: ${mod.protocol}, path: ${mod.path}, version: ${mod.version}`
       );
     }
   });
-}
-
-export function isConfig(config: any): config is Config {
-  try {
-    validateConfig(config);
-  } catch (e) {
-    console.error(e);
-    return false;
-  }
-  return true;
 }
 
 export async function getConfig(filePath: string): Promise<Config | undefined> {
   const dec = new TextDecoder('utf-8');
   const jsonBody = dec.decode(await readFile(filePath));
   const config = JSON.parse(jsonBody);
-  if (!isConfig(config)) {
+  try {
+    validateConfig(config);
+  } catch (e) {
+    console.error(e);
     return undefined;
   }
+  config.modules = config.modules.map(
+    mod => new Module(mod.protocol, mod.path, mod.version, mod.files)
+  );
   return config;
 }
 
