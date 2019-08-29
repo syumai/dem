@@ -1,33 +1,22 @@
 import * as ts from 'typescript';
-// import ts from './typescript.js';
 
 const source = `
-import hoge from './hoge.js';
-import higo from './higo.js';
+import * as dejs from './vendor/https/deno.land/x/dejs/mod.ts';
+import { app, get } from './vendor/https/denopkg.com/dinatra/mod.ts';
+import { indexHandler } from './handlers.ts';
 
-const fn = () => {
-  const hige = import('./hige.js');
-}
+const hoge = fuga?.fuge;
 
-import fugi from './fugi.js';
+app(
+  get('/', indexHandler),
+);
 `;
 
-let counter = 0;
-
 const sourceFile = ts.createSourceFile(
-  'hoge.ts',
+  'app.ts',
   source,
   ts.ScriptTarget.ES2020
 );
-
-function crawlNodes(node: ts.Node) {
-  console.log(`${counter}: ${node.kind}`, ts.SyntaxKind[node.kind]);
-  if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-    inspectImport(node);
-  }
-  counter++;
-  node.forEachChild(crawlNodes);
-}
 
 function collectImports(node: ts.Node): Array<ts.Node> {
   const imports: Array<ts.Node> = [];
@@ -35,7 +24,7 @@ function collectImports(node: ts.Node): Array<ts.Node> {
     if (node.kind === ts.SyntaxKind.ImportDeclaration) {
       imports.push(node);
     }
-  }
+  };
   node.forEachChild(collectImport);
   return imports;
 }
@@ -43,20 +32,68 @@ function collectImports(node: ts.Node): Array<ts.Node> {
 function inspectImport(node: ts.Node) {
   if (node.kind !== ts.SyntaxKind.ImportDeclaration) {
     throw new Error(
-      `node kind want: ${ts.SyntaxKind[ts.SyntaxKind.ImportDeclaration]}, got: ${ts.SyntaxKind[node.kind]}`,
+      `node kind want: ${
+        ts.SyntaxKind[ts.SyntaxKind.ImportDeclaration]
+      }, got: ${ts.SyntaxKind[node.kind]}`
     );
   }
   node.forEachChild((child: ts.Node) => {
     switch (child.kind) {
-    case ts.SyntaxKind.ImportClause:
-    case ts.SyntaxKind.StringLiteral:
-      console.log(child.getText(sourceFile));
+      case ts.SyntaxKind.ImportClause:
+      case ts.SyntaxKind.StringLiteral:
+        console.log(child.getText(sourceFile));
     }
   });
 }
 
-// crawlNodes(sourceFile);
-const imports = collectImports(sourceFile);
-for (const imp of imports) {
-  console.log(imp.getText(sourceFile));
+function analyzeImport(node: ts.Node): Array<ts.Node> {
+  const imports: Array<ts.Node> = [];
+  const collectImport = (node: ts.Node) => {
+    if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+      imports.push(node);
+    }
+  };
+  node.forEachChild(collectImport);
+  return imports;
 }
+
+const config = {
+  version: '0.1.0',
+  modules: [
+    {
+      protocol: 'https',
+      path: 'deno.land/x/dejs',
+      version: '0.3.0',
+      files: ['/mod.ts'],
+    },
+  ],
+};
+
+function removeQuotes(s: string): string {
+  return s.replace(/[\'\"\`]/g, '');
+}
+
+function ensure(node: ts.SourceFile): string[] {
+  const filePaths: string[] = [];
+  const crawlImport = (node: ts.Node) => {
+    if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+      node.forEachChild((child: ts.Node) => {
+        if (child.kind === ts.SyntaxKind.StringLiteral) {
+          filePaths.push(removeQuotes(child.getText(sourceFile)));
+        }
+      });
+    }
+  };
+  node.forEachChild(crawlImport);
+  return filePaths;
+  // const moduleMap: { [key: string]: Object } = {};
+  // for (const mod of config.modules) {
+  //   const prefix = `./vendor/${mod.protocol}/${mod.path}`;
+  //   for (const file of mod.files) {
+  //     const key = `${prefix}${file}`;
+  //     moduleMap[key] = mod;
+  //   }
+  // }
+}
+
+console.log(ensure(sourceFile));

@@ -2,7 +2,7 @@
 exports.__esModule = true;
 var ts = require("typescript");
 // import ts from './typescript.js';
-var source = "\nimport hoge from './hoge.js';\nimport higo from './higo.js';\n\nconst fn = () => {\n  const hige = import('./hige.js');\n}\n\nimport fugi from './fugi.js';\n";
+var source = "\nimport * as dejs from './vendor/https/deno.land/x/dejs/mod.ts';\nimport { app, get } from './vendor/https/denopkg.com/dinatra/mod.ts';\nimport { indexHandler } from './handlers.ts';\n\napp(\n  get('/', indexHandler),\n);\n";
 var counter = 0;
 var sourceFile = ts.createSourceFile('hoge.ts', source, ts.ScriptTarget.ES2020);
 function crawlNodes(node) {
