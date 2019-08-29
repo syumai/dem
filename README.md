@@ -43,7 +43,7 @@ deno xxx.ts
 - If you want to update module, use `dem update`.
 
 ```
-dem update https://deno.land/x/dejs@0.4.0
+dem update https://deno.land/std@v0.16.0
 ```
 
 ## Installation
