@@ -62,7 +62,7 @@ dem update https://deno.land/x/dejs@0.2.0  // update module to `0.2.0`
 dem unlink https://deno.land/x/dejs/mod.ts // remove alias of `dejs@0.2.0/mod.ts`.
 dem remove https://deno.land/x/dejs        // remove module `dejs`
 dem ensure                                 // resolve modules used in project and link them.
-dem prune (WIP)                            // remove unused in modules and aliases.
+dem prune (WIP)                            // remove unused modules and aliases.
 ```
 
 ### Unsupported features
