@@ -1,10 +1,11 @@
 import * as ts from 'typescript';
-// import ts from './typescript.js';
 
 const source = `
 import * as dejs from './vendor/https/deno.land/x/dejs/mod.ts';
 import { app, get } from './vendor/https/denopkg.com/dinatra/mod.ts';
 import { indexHandler } from './handlers.ts';
+
+const hoge = fuga?.fuge;
 
 app(
   get('/', indexHandler),
@@ -68,9 +69,31 @@ const config = {
   ],
 };
 
-function ensure() {}
-
-const imports = collectImports(sourceFile);
-for (const imp of imports) {
-  console.log(imp.getText(sourceFile));
+function removeQuotes(s: string): string {
+  return s.replace(/[\'\"\`]/g, '');
 }
+
+function ensure(node: ts.SourceFile): string[] {
+  const filePaths: string[] = [];
+  const crawlImport = (node: ts.Node) => {
+    if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+      node.forEachChild((child: ts.Node) => {
+        if (child.kind === ts.SyntaxKind.StringLiteral) {
+          filePaths.push(removeQuotes(child.getText(sourceFile)));
+        }
+      });
+    }
+  };
+  node.forEachChild(crawlImport);
+  return filePaths;
+  // const moduleMap: { [key: string]: Object } = {};
+  // for (const mod of config.modules) {
+  //   const prefix = `./vendor/${mod.protocol}/${mod.path}`;
+  //   for (const file of mod.files) {
+  //     const key = `${prefix}${file}`;
+  //     moduleMap[key] = mod;
+  //   }
+  // }
+}
+
+console.log(ensure(sourceFile));

@@ -51,7 +51,8 @@ async function main(): Promise<void> {
       dem.remove(defaultConfigFilePath, args[2]);
       break;
     case SubCommandType.Ensure:
-      dem.ensure(defaultConfigFilePath, args[2]);
+      const excludes = ['vendor', 'node_modules'];
+      dem.ensure(defaultConfigFilePath, excludes);
       break;
     case SubCommandType.Prune:
       // dem.prune();

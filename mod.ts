@@ -1,10 +1,21 @@
-const { mkdir, writeFile, remove: removeFile } = Deno;
+const { cwd, mkdir, writeFile, remove: removeFile, readDir, readFile } = Deno;
 
 import { getConfig, saveConfig, Config } from './config.ts';
-import { moduleEquals, parseModule, Module } from './module.ts';
+import { Module } from './module.ts';
 import * as path from './vendor/https/deno.land/std/fs/path.ts';
+// @deno-types='https://denopkg.com/syumai/TypeScript@dem/lib/typescript.d.ts';
+import ts from './vendor/https/denopkg.com/syumai/TypeScript/lib/typescript-patched.js';
 
 const vendorDirectoryPath = 'vendor';
+const dec = new TextDecoder('utf-8');
+
+function compareModules(modA: Module, modB: Module): number {
+  return modA.path.localeCompare(modB.path);
+}
+
+function moduleEquals(a: Module, b: Module): boolean {
+  return a.protocol === b.protocol && a.path === b.path;
+}
 
 export async function init(
   version: string,
@@ -28,7 +39,7 @@ export async function add(
     console.error(`failed to get config: ${configFilePath}`);
     return;
   }
-  const addedMod = parseModule(urlStr);
+  const addedMod = Module.parse(urlStr);
   if (!addedMod) {
     console.error(`failed to parse module: ${urlStr}`);
     return;
@@ -44,8 +55,7 @@ to update module, please use 'dem update'.`);
 
   // Update config.
   config.modules.push(addedMod);
-  // NOTE: is it correct to use localeCompare here?
-  config.modules.sort((modA, modB) => modA.compare(modB));
+  config.modules.sort(compareModules);
   await saveConfig(config, configFilePath);
   console.log(
     `successfully added new module: ${addedMod.toString()}, version: ${
@@ -73,6 +83,10 @@ export async function link(
   }
 
   const filePath = urlStr.split(foundMod.toString())[1];
+  if (foundMod.files.includes(filePath)) {
+    return;
+  }
+
   const directoryPath = path.dirname(filePath);
   const enc = new TextEncoder();
   const fp = path.join(
@@ -92,11 +106,9 @@ export async function link(
   await mkdir(dp, true);
   await writeFile(fp, enc.encode(script));
 
-  if (!foundMod.files.includes(filePath)) {
-    foundMod.files.push(filePath);
-    foundMod.files.sort((a, b) => a.localeCompare(b));
-    saveConfig(config, configFilePath);
-  }
+  foundMod.files.push(filePath);
+  foundMod.files.sort((a, b) => a.localeCompare(b));
+  saveConfig(config, configFilePath);
 
   console.log(
     `successfully created alias: ${foundMod.toStringWithVersion()}${filePath}`
@@ -112,7 +124,7 @@ export async function update(
     console.error(`failed to get config: ${configFilePath}`);
     return;
   }
-  const updatedMod = parseModule(urlStr);
+  const updatedMod = Module.parse(urlStr);
   if (!updatedMod) {
     console.error(`failed to parse module: ${urlStr}`);
     return;
@@ -242,7 +254,60 @@ export async function remove(
   console.log(`successfully removed module: ${urlStr}`);
 }
 
+function removeQuotes(s: string): string {
+  return s.replace(/[\'\"\`]/g, '');
+}
+
+const crawlImport = (filePaths: string[], sourceFile: ts.SourceFile) => (
+  node: ts.Node
+) => {
+  if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+    node.forEachChild((child: ts.Node) => {
+      if (child.kind === ts.SyntaxKind.StringLiteral) {
+        filePaths.push(removeQuotes(child.getText(sourceFile)));
+      }
+    });
+  }
+};
+
+async function getImportFilePaths(
+  dirName: string,
+  excludes: string[]
+): Promise<string[]> {
+  const files = await readDir(dirName);
+  const filePaths: string[] = [];
+  for (const f of files) {
+    if (!f.name) {
+      continue;
+    }
+    if (f.isFile() && f.name.match(/\.(js|ts)x?$/)) {
+      const body = await readFile(path.join(dirName, f.name));
+      const sourceFile = ts.createSourceFile(
+        f.name,
+        dec.decode(body),
+        ts.ScriptTarget.ES2020
+      );
+      sourceFile.forEachChild(crawlImport(filePaths, sourceFile));
+    } else if (f.isDirectory() && !excludes.includes(f.name)) {
+      const result = await getImportFilePaths(
+        path.join(dirName, f.name),
+        excludes
+      );
+      filePaths.push(...result);
+    }
+  }
+  return filePaths;
+}
+
 export async function ensure(
   configFilePath: string,
-  urlStr: string
-): Promise<void> {}
+  excludes: string[]
+): Promise<void> {
+  const imports = (await getImportFilePaths(cwd(), ['node_modules', 'vendor']))
+    .filter(f => f.match(/vendor/))
+    .map(f => f.replace(/^.+vendor\//, ''))
+    .map(f => f.replace(/\//, '://'));
+  for (const urlStr of imports) {
+    await link(configFilePath, urlStr);
+  }
+}
