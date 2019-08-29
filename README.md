@@ -10,7 +10,7 @@
 - vendor/https/deno.land/x/dejs/mod.ts
 
 ```ts
-export * from 'https://deno.land/x/dejs@0.1.0/mod.ts';
+export * from 'https://deno.land/x/dejs@0.3.1/mod.ts';
 ```
 
 ## Usage
@@ -19,19 +19,31 @@ export * from 'https://deno.land/x/dejs@0.1.0/mod.ts';
 
 ```
 dem init
-dem add https://deno.land/x/dejs@0.3.1
+dem add https://deno.land/std@v0.15.0
 ```
 
 - Import module from `vendor` directory in ts file.
 
 ```ts
-import * as dejs from './vendor/https/deno.land/x/dejs/mod.ts';
+import * as path from './vendor/https/deno.land/std/fs/path.ts';
 ```
 
 - Resolve module files used in project.
 
 ```
 dem ensure
+```
+
+- Run project using resolved module.
+
+```
+deno xxx.ts
+```
+
+- If you want to update module, use `dem update`.
+
+```
+dem update https://deno.land/x/dejs@0.4.0
 ```
 
 ## Installation
@@ -57,6 +69,7 @@ dem prune (WIP)                            // remove unused in modules and alias
 
 - default export
 - dem prune
+- manage `.d.ts` file
 
 ## Author
 
