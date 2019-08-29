@@ -49,7 +49,7 @@ dem update https://deno.land/std@v0.16.0
 ## Installation
 
 ```console
-deno install dem https://denopkg.com/syumai/dem/cmd.ts --allow-read --allow-write
+deno install dem https://denopkg.com/syumai/dem@0.1.0/cmd.ts --allow-read --allow-write
 ```
 
 ## Commands
