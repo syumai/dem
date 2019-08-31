@@ -13,43 +13,52 @@
 export * from 'https://deno.land/x/dejs@0.3.1/mod.ts';
 ```
 
+## Installation
+
+```console
+deno install dem https://denopkg.com/syumai/dem@0.1.0/cmd.ts --allow-read --allow-write
+```
+
 ## Usage
 
 - Initialize project and add module.
 
-```
-dem init
-dem add https://deno.land/std@v0.15.0
+```console
+$ dem init
+successfully initialized a project.
+
+$ dem add https://deno.land/std@v0.15.0
+successfully added new module: https://deno.land/std, version: v0.15.0
 ```
 
 - Import module from `vendor` directory in ts file.
 
+example.ts
+
 ```ts
 import * as path from './vendor/https/deno.land/std/fs/path.ts';
+
+console.log(path.join(Deno.cwd(), 'example'));
 ```
 
 - Resolve module files used in project.
 
-```
-dem ensure
+```console
+$ dem ensure
+successfully created alias: https://deno.land/std@v0.15.0/fs/path.ts
 ```
 
-- Run project using resolved module.
+- Run project.
 
 ```
-deno xxx.ts
+$ deno example.ts
 ```
 
 - If you want to update module, use `dem update`.
 
 ```
-dem update https://deno.land/std@v0.16.0
-```
-
-## Installation
-
-```console
-deno install dem https://denopkg.com/syumai/dem@0.1.0/cmd.ts --allow-read --allow-write
+$ dem update https://deno.land/std@v0.16.0
+successfully updated module: https://deno.land/std, version: v0.16.0
 ```
 
 ## Commands
