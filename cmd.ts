@@ -1,10 +1,11 @@
 const { args } = Deno;
 import * as dem from './mod.ts';
 
-export const version = '0.1.0';
+export const version = '0.1.1';
 const defaultConfigFilePath = 'dem.json';
 
 enum SubCommandType {
+  Version = 'version',
   Init = 'init',
   Add = 'add',
   Link = 'link',
@@ -16,7 +17,8 @@ enum SubCommandType {
 }
 
 function isSubCommandType(t: string): t is SubCommandType {
-  return Object.values(SubCommandType).includes(t);
+  const commandTypes = Object.values(SubCommandType) as string[];
+  return commandTypes.includes(t);
 }
 
 async function main(): Promise<void> {
@@ -32,6 +34,9 @@ async function main(): Promise<void> {
   }
   // const parsedArgs = parse(args.slice(2));
   switch (subCmdType) {
+    case SubCommandType.Version:
+      console.log(`dem: ${version}`);
+      break;
     case SubCommandType.Init:
       dem.init(version, defaultConfigFilePath);
       break;
