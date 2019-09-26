@@ -4,14 +4,19 @@
     {
       "protocol": "https",
       "path": "deno.land/std",
-      "version": "v0.16.0",
-      "files": ["/fs/path.ts", "/http/server.ts"]
+      "version": "v0.18.0",
+      "files": [
+        "/fs/path.ts",
+        "/http/server.ts"
+      ]
     },
     {
       "protocol": "https",
       "path": "denopkg.com/syumai/TypeScript",
       "version": "dem",
-      "files": ["/lib/typescript-patched.js"]
+      "files": [
+        "/lib/typescript-patched.js"
+      ]
     }
   ]
 }
