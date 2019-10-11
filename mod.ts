@@ -3,6 +3,7 @@ const { cwd, mkdir, writeFile, remove: removeFile, readDir, readFile } = Deno;
 import { getConfig, saveConfig, Config } from './config.ts';
 import { Module } from './module.ts';
 import * as path from './vendor/https/deno.land/std/fs/path.ts';
+import { sprintf } from './vendor/https/deno.land/std/fmt/sprintf.ts';
 // @deno-types='https://denopkg.com/syumai/TypeScript@dem/lib/typescript.d.ts';
 import ts from './vendor/https/denopkg.com/syumai/TypeScript/lib/typescript-patched.js';
 
@@ -101,7 +102,11 @@ export async function link(
     foundMod.path,
     directoryPath
   );
-  const script = `export * from '${foundMod.toStringWithVersion()}${filePath}';\n`;
+  const script = sprintf(
+    "export * from '%s%s';\n",
+    foundMod.toStringWithVersion(),
+    filePath
+  );
 
   await mkdir(dp, true);
   await writeFile(fp, enc.encode(script));
@@ -145,7 +150,11 @@ export async function update(
       foundMod.path,
       filePath
     );
-    const script = `export * from '${updatedMod.toStringWithVersion()}${filePath}';`;
+    const script = sprintf(
+      "export * from '%s%s';\n",
+      updatedMod.toStringWithVersion(),
+      filePath
+    );
     await writeFile(fp, enc.encode(script));
   }
   foundMod.version = updatedMod.version;
