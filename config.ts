@@ -2,7 +2,6 @@ import { Module } from './module.ts';
 const { readFile, writeFile } = Deno;
 
 export type Config = {
-  version: string;
   modules: Module[];
 };
 
@@ -10,20 +9,15 @@ function validateConfig(config: any) {
   if (typeof config !== 'object') {
     throw new Error(`config type must be 'object'. actual: '${typeof config}'`);
   }
-  if (typeof config.version !== 'string') {
-    throw new Error(
-      `version type must be 'string'. actual: '${typeof config.version}'`
-    );
-  }
   if (!Array.isArray(config.modules)) {
     throw new Error(
       `version type must be Array. actual: '${typeof config.modules}'`
     );
   }
   config.modules.forEach((mod, i) => {
-    if (!mod.protocol || !mod.path || !mod.version || !mod.files) {
+    if (!mod.protocol || !mod.path || !mod.files) {
       throw new Error(
-        `module format is invalid. index: ${i}, protocol: ${mod.protocol}, path: ${mod.path}, version: ${mod.version}`
+        `module format is invalid. index: ${i}, protocol: ${mod.protocol}, path: ${mod.path}`
       );
     }
   });
