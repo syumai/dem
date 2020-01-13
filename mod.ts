@@ -2,7 +2,7 @@ const { cwd, mkdir, writeFile, remove: removeFile, readDir, readFile } = Deno;
 
 import { getConfig, saveConfig, Config } from './config.ts';
 import { Module } from './module.ts';
-import * as path from './vendor/https/deno.land/std/fs/path.ts';
+import * as path from './vendor/https/deno.land/std/path/mod.ts';
 import { sprintf } from './vendor/https/deno.land/std/fmt/sprintf.ts';
 // @deno-types='https://denopkg.com/syumai/TypeScript@dem/lib/typescript.d.ts';
 import ts from './vendor/https/denopkg.com/syumai/TypeScript/lib/typescript-patched.js';
@@ -23,7 +23,6 @@ export async function init(
   configFilePath: string
 ): Promise<void> {
   const config: Config = {
-    version: version,
     modules: [],
   };
   await saveConfig(config, configFilePath);
