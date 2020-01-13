@@ -1,7 +1,7 @@
 const { args } = Deno;
 import * as dem from './mod.ts';
 
-export const version = '0.2.0';
+export const version = '0.3.0';
 const defaultConfigFilePath = 'dem.json';
 
 enum SubCommandType {
