@@ -22,7 +22,7 @@ function isSubCommandType(t: string): t is SubCommandType {
 }
 
 async function main(): Promise<void> {
-  const subCmdType = args[1];
+  const subCmdType = args[0];
   if (!subCmdType) {
     const subCmdTypes = Object.values(SubCommandType).join(', ');
     console.error(`sub command must be given: ${subCmdTypes}`);
@@ -41,19 +41,19 @@ async function main(): Promise<void> {
       dem.init(version, defaultConfigFilePath);
       break;
     case SubCommandType.Add:
-      dem.add(defaultConfigFilePath, args[2]);
+      dem.add(defaultConfigFilePath, args[1]);
       break;
     case SubCommandType.Link:
-      dem.link(defaultConfigFilePath, args[2]);
+      dem.link(defaultConfigFilePath, args[1]);
       break;
     case SubCommandType.Update:
-      dem.update(defaultConfigFilePath, args[2]);
+      dem.update(defaultConfigFilePath, args[1]);
       break;
     case SubCommandType.Unlink:
-      dem.unlink(defaultConfigFilePath, args[2]);
+      dem.unlink(defaultConfigFilePath, args[1]);
       break;
     case SubCommandType.Remove:
-      dem.remove(defaultConfigFilePath, args[2]);
+      dem.remove(defaultConfigFilePath, args[1]);
       break;
     case SubCommandType.Ensure:
       const excludes = ['vendor', 'node_modules'];
