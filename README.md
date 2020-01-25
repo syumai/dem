@@ -23,11 +23,11 @@ deno install dem https://deno.land/x/dem@0.3.1/cmd.ts --allow-read --allow-write
 
 ### Getting Started
 
-#### 1. Initialize a project.
+#### 1. Initialize the project.
 
 ```console
 $ dem init
-successfully initialized a project.
+successfully initialized the project.
 ```
 
 #### 2. Add a module.
@@ -37,7 +37,7 @@ $ dem add https://deno.land/std@v0.15.0
 successfully added new module: https://deno.land/std, version: v0.15.0
 ```
 
-#### 3. Import added module from `vendor` directory in ts file.
+#### 3. Import the added module from the `vendor` directory.
 
 example.ts
 
@@ -52,9 +52,10 @@ console.log(path.join(Deno.cwd(), 'example'));
 ```console
 $ dem ensure
 successfully created alias: https://deno.land/std@v0.15.0/fs/path.ts
+# This alias file is stored as vendor/https/deno.land/std/fs/path.ts
 ```
 
-#### 5. Run project.
+#### 5. Run the project.
 
 ```
 $ deno example.ts
