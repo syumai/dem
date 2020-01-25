@@ -1,7 +1,6 @@
-const { args } = Deno;
 import * as dem from './mod.ts';
 
-export const version = '0.3.0';
+export const version = '0.3.1';
 const defaultConfigFilePath = 'dem.json';
 
 enum SubCommandType {
@@ -21,7 +20,7 @@ function isSubCommandType(t: string): t is SubCommandType {
   return commandTypes.includes(t);
 }
 
-async function main(): Promise<void> {
+async function main(args: string[]): Promise<void> {
   const subCmdType = args[0];
   if (!subCmdType) {
     const subCmdTypes = Object.values(SubCommandType).join(', ');
@@ -66,5 +65,9 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.main) {
-  main();
+  let { args } = Deno;
+  if (args[0] === '--') {
+    args = args.slice(1);
+  }
+  main(args);
 }
