@@ -15,20 +15,8 @@ export * from 'https://deno.land/x/dejs@0.3.1/mod.ts';
 
 ## Installation
 
-### Deno version >= v0.29.0
-
 ```console
-# Install deno_installer (Because deno install in Deno v0.29.0 is broken)
-deno -A https://deno.land/std/installer/mod.ts -- deno_installer https://deno.land/std/installer/mod.ts -A
-
-# Install dem
-deno_installer dem https://deno.land/x/dem@0.3.0/cmd.ts --allow-read --allow-write
-```
-
-### Deno version < v0.29.0
-
-```console
-deno install dem https://deno.land/x/dem@0.2.0/cmd.ts --allow-read --allow-write
+deno install dem https://deno.land/x/dem@0.3.1/cmd.ts --allow-read --allow-write
 ```
 
 ## Usage
