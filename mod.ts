@@ -224,7 +224,7 @@ export async function remove(
     return;
   }
   let foundModIndex = 0;
-  let foundMod: Module;
+  let foundMod: Module | undefined;
   for (const mod of config.modules) {
     if (urlStr.startsWith(mod.toString())) {
       foundMod = mod;
