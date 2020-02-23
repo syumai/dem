@@ -5,7 +5,7 @@ export type Config = {
   modules: Module[];
 };
 
-function validateConfig(config: any) {
+function validateConfig(config: Config) {
   if (typeof config !== 'object') {
     throw new Error(`config type must be 'object'. actual: '${typeof config}'`);
   }
@@ -26,7 +26,7 @@ function validateConfig(config: any) {
 export async function getConfig(filePath: string): Promise<Config | undefined> {
   const dec = new TextDecoder('utf-8');
   const jsonBody = dec.decode(await readFile(filePath));
-  const config = JSON.parse(jsonBody);
+  const config = JSON.parse(jsonBody) as Config;
   try {
     validateConfig(config);
   } catch (e) {
