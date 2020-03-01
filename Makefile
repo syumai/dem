@@ -3,7 +3,7 @@ install-local:
 	deno install --allow-read --allow-write -f dem-local ./cmd.ts
 
 .PHONY: test
-test: install-local test/cmd
+test: test/cmd
 
 .PHONY: test/cmd
 test/cmd:

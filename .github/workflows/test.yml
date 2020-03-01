@@ -17,5 +17,10 @@ jobs:
         uses: denolib/setup-deno@v1.2.0
       - name: Show Deno version
         run: deno --version
+      - name: Install dem-local
+        run: |
+          make install-local
+          echo "::add-path::$HOME/.deno/bin"
       - name: Run tests
-        run: make test/cmd
+        run: |
+          make test
