@@ -1,5 +1,7 @@
 # dem
 
+[![Build Status](https://github.com/syumai/dem/workflows/test/badge.svg?branch=master)](https://github.com/syumai/dem/actions)
+
 - A module version manager for Deno.
 - dem creates versioned aliases of modules.
   - alias files are stored in `vendor` directory.
