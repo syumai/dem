@@ -1,6 +1,6 @@
 import * as dem from './mod.ts';
+import { version } from './version.ts';
 
-export const version = '0.3.3';
 const defaultConfigFilePath = 'dem.json';
 
 enum SubCommandType {
