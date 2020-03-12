@@ -1,4 +1,4 @@
-const { cwd, mkdir, writeFile, remove: removeFile, readDir, readFile } = Deno;
+const { cwd, mkdir, writeFile, remove: removeFile, readdir, readFile } = Deno;
 
 import { getConfig, saveConfig, Config } from './config.ts';
 import { Module } from './module.ts';
@@ -282,7 +282,7 @@ async function getImportFilePaths(
   dirName: string,
   excludes: string[]
 ): Promise<string[]> {
-  const files = await readDir(dirName);
+  const files = await readdir(dirName);
   const filePaths: string[] = [];
   for (const f of files) {
     if (!f.name) {

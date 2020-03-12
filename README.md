@@ -12,13 +12,13 @@
 - vendor/https/deno.land/x/dejs/mod.ts
 
 ```ts
-export * from 'https://deno.land/x/dejs@0.3.3/mod.ts';
+export * from 'https://deno.land/x/dejs@0.3.4/mod.ts';
 ```
 
 ## Installation
 
 ```console
-deno install --allow-read --allow-write -f dem https://deno.land/x/dem@0.3.3/cmd.ts
+deno install --allow-read --allow-write -f dem https://deno.land/x/dem@0.3.4/cmd.ts
 ```
 
 ## Usage
