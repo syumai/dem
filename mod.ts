@@ -184,7 +184,7 @@ export async function unlink(
     return;
   }
 
-  // Remove aliases
+  // Remove alias
   const filePath = urlStr.split(foundMod.toString())[1];
   const fp = path.join(
     vendorDirectoryPath,
@@ -202,9 +202,13 @@ export async function unlink(
   try {
     await removeFile(fp, { recursive: false });
   } catch (e) {
-    console.error(`failed to remove file: ${fp}`);
-    console.error(e);
-    return;
+    if (e instanceof Deno.errors.NotFound) {
+      console.error(`alias already removed: ${fp}`);
+    } else {
+      console.error(`failed to remove directory: ${fp}`);
+      console.error(e);
+      return;
+    }
   }
 
   // Update config.
@@ -237,7 +241,7 @@ export async function remove(
     return;
   }
 
-  // Remove aliases
+  // Remove alias
   const filePath = urlStr.split(foundMod.toString())[1];
   const directoryPath = path.dirname(filePath);
   const dp = path.join(
@@ -251,9 +255,13 @@ export async function remove(
   try {
     await removeFile(dp, { recursive: true });
   } catch (e) {
-    console.error(`failed to remove directory: ${dp}`);
-    console.error(e);
-    return;
+    if (e instanceof Deno.errors.NotFound) {
+      console.error(`alias already removed: ${dp}`);
+    } else {
+      console.error(`failed to remove directory: ${dp}`);
+      console.error(e);
+      return;
+    }
   }
 
   // Update config.
@@ -272,6 +280,7 @@ const crawlImport = (filePaths: string[], sourceFile: ts.SourceFile) => (
   if (node.kind === ts.SyntaxKind.ImportDeclaration) {
     node.forEachChild((child: ts.Node) => {
       if (child.kind === ts.SyntaxKind.StringLiteral) {
+        console.log('found:', child.getText(sourceFile));
         filePaths.push(removeQuotes(child.getText(sourceFile)));
       }
     });
@@ -307,15 +316,67 @@ async function getImportFilePaths(
   return filePaths;
 }
 
+async function getFormattedImportFilePaths(
+  dirName: string,
+  excludes: string[]
+): Promise<string[]> {
+  return (await getImportFilePaths(dirName, excludes))
+    .filter(f => f.match(/vendor/))
+    .map(f => f.replace(/^.+vendor\//, ''))
+    .map(f => f.replace(/\//, '://'));
+}
+
 export async function ensure(
   configFilePath: string,
   excludes: string[]
 ): Promise<void> {
-  const imports = (await getImportFilePaths(cwd(), ['node_modules', 'vendor']))
-    .filter(f => f.match(/vendor/))
-    .map(f => f.replace(/^.+vendor\//, ''))
-    .map(f => f.replace(/\//, '://'));
+  const imports = await getFormattedImportFilePaths(cwd(), excludes);
   for (const urlStr of imports) {
     await link(configFilePath, urlStr);
+  }
+}
+
+export async function prune(
+  configFilePath: string,
+  excludes: string[]
+): Promise<void> {
+  let config = await getConfig(configFilePath);
+  if (!config) {
+    console.error(`failed to get config: ${configFilePath}`);
+    return;
+  }
+
+  const imports = await getFormattedImportFilePaths(cwd(), excludes);
+
+  // Detect removed aliases
+  const removedAliases: string[] = [];
+  for (const mod of config.modules) {
+    for (const filePath of mod.files) {
+      const modUrlStr = `${mod.protocol}://${mod.path}${filePath}`;
+      if (!imports.includes(modUrlStr)) {
+        removedAliases.push(modUrlStr);
+      }
+    }
+  }
+
+  console.log('removed aliases:', removedAliases);
+
+  // Remove aliases
+  for (const urlStr of removedAliases) {
+    await unlink(configFilePath, urlStr);
+  }
+
+  // Reload config
+  config = await getConfig(configFilePath);
+  if (!config) {
+    console.error(`failed to get config: ${configFilePath}`);
+    return;
+  }
+
+  for (const mod of config.modules) {
+    if (mod.files.length === 0) {
+      const modulePath = `${mod.protocol}://${mod.path}`;
+      await remove(configFilePath, modulePath);
+    }
   }
 }
