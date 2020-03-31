@@ -280,7 +280,6 @@ const crawlImport = (filePaths: string[], sourceFile: ts.SourceFile) => (
   if (node.kind === ts.SyntaxKind.ImportDeclaration) {
     node.forEachChild((child: ts.Node) => {
       if (child.kind === ts.SyntaxKind.StringLiteral) {
-        console.log('found:', child.getText(sourceFile));
         filePaths.push(removeQuotes(child.getText(sourceFile)));
       }
     });
@@ -358,8 +357,6 @@ export async function prune(
       }
     }
   }
-
-  console.log('removed aliases:', removedAliases);
 
   // Remove aliases
   for (const urlStr of removedAliases) {
