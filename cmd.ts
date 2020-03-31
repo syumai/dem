@@ -31,7 +31,9 @@ async function main(args: string[]): Promise<void> {
     console.error(`sub command ${subCmdType} does not exist.`);
     return;
   }
+
   // const parsedArgs = parse(args.slice(2));
+  const excludes = ['vendor', 'node_modules'];
   switch (subCmdType) {
     case SubCommandType.Version:
       console.log(`dem: ${version}`);
@@ -55,11 +57,10 @@ async function main(args: string[]): Promise<void> {
       dem.remove(defaultConfigFilePath, args[1]);
       break;
     case SubCommandType.Ensure:
-      const excludes = ['vendor', 'node_modules'];
       dem.ensure(defaultConfigFilePath, excludes);
       break;
     case SubCommandType.Prune:
-      // dem.prune();
+      dem.prune(defaultConfigFilePath, excludes);
       break;
   }
 }

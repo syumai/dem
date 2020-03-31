@@ -12,13 +12,13 @@
 - vendor/https/deno.land/x/dejs/mod.ts
 
 ```ts
-export * from 'https://deno.land/x/dejs@0.3.4/mod.ts';
+export * from 'https://deno.land/x/dejs@0.2.0/mod.ts';
 ```
 
 ## Installation
 
 ```console
-deno install --allow-read --allow-write -f dem https://deno.land/x/dem@0.3.4/cmd.ts
+deno install --allow-read --allow-write -f dem https://deno.land/x/dem@0.4.0/cmd.ts
 ```
 
 ## Usage
@@ -79,14 +79,13 @@ dem link https://deno.land/x/dejs/mod.ts   // create alias of `dejs@0.1.0/mod.ts
 dem update https://deno.land/x/dejs@0.2.0  // update module to `0.2.0`
 dem unlink https://deno.land/x/dejs/mod.ts // remove alias of `dejs@0.2.0/mod.ts`.
 dem remove https://deno.land/x/dejs        // remove module `dejs`
-dem ensure                                 // resolve modules used in project and link them.
-dem prune (WIP)                            // remove unused modules and aliases.
+dem ensure                                 // resolve file paths of added modules used in project and link them.
+dem prune                                  // remove unused modules and aliases.
 ```
 
 ### Unsupported features
 
 - default export
-- dem prune
 - manage `.d.ts` file
 
 ## Author

@@ -12,6 +12,7 @@ test/cmd:
 	cd tmp/welcome && \
 		dem-local init && \
 		dem-local add https://deno.land/std@v0.35.0 && \
-		dem-local ensure
-	deno tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
+		dem-local ensure \
+		dem-local prune
+	deno -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
 	rm -rf tmp/welcome

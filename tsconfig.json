@@ -1,26 +1,11 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "deno": [
-        "../../../.deno/deno.d.ts"
-      ],
-      "https://*": [
-        "../../../.deno/deps/https/*"
-      ],
-      "http://*": [
-        "../../../.deno/deps/http/*"
-      ]
-    },
     "target": "esnext",
     "strict": true,
+    "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
-  },
-  "include": [
-    "./**/*.ts",
-    "./**/*.js"
-  ]
+  }
 }
