@@ -11,10 +11,6 @@ install-local:
 	deno install --allow-read --allow-write -f dem-local ./cmd.ts
 
 test: test/cmd
-test:
-	deno run --allow-net serve_test.ts
-	deno run --allow-net --allow-read static_test.ts
-	deno run --allow-net helpers_test.ts
 
 test/cmd:
 	mkdir -p tmp/welcome
@@ -27,6 +23,4 @@ test/cmd:
 	deno -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
 	rm -rf tmp/welcome
 
-.PHONY: test
-.PHONY: install-local
-.PHONY: test/cmd
+.PHONY: lint fmt install-local test test/cmd
