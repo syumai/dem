@@ -1,18 +1,18 @@
-import * as dem from './mod.ts';
-import { version } from './version.ts';
+import * as dem from "./mod.ts";
+import { version } from "./version.ts";
 
-const defaultConfigFilePath = 'dem.json';
+const defaultConfigFilePath = "dem.json";
 
 enum SubCommandType {
-  Version = 'version',
-  Init = 'init',
-  Add = 'add',
-  Link = 'link',
-  Update = 'update',
-  Remove = 'remove',
-  Unlink = 'unlink',
-  Ensure = 'ensure',
-  Prune = 'prune',
+  Version = "version",
+  Init = "init",
+  Add = "add",
+  Link = "link",
+  Update = "update",
+  Remove = "remove",
+  Unlink = "unlink",
+  Ensure = "ensure",
+  Prune = "prune",
 }
 
 function isSubCommandType(t: string): t is SubCommandType {
@@ -23,7 +23,7 @@ function isSubCommandType(t: string): t is SubCommandType {
 async function main(args: string[]): Promise<void> {
   const subCmdType = args[0];
   if (!subCmdType) {
-    const subCmdTypes = Object.values(SubCommandType).join(', ');
+    const subCmdTypes = Object.values(SubCommandType).join(", ");
     console.error(`sub command must be given: ${subCmdTypes}`);
     return;
   }
@@ -33,7 +33,7 @@ async function main(args: string[]): Promise<void> {
   }
 
   // const parsedArgs = parse(args.slice(2));
-  const excludes = ['vendor', 'node_modules'];
+  const excludes = ["vendor", "node_modules"];
   switch (subCmdType) {
     case SubCommandType.Version:
       console.log(`dem: ${version}`);
@@ -67,7 +67,7 @@ async function main(args: string[]): Promise<void> {
 
 if (import.meta.main) {
   let { args } = Deno;
-  if (args[0] === '--') {
+  if (args[0] === "--") {
     args = args.slice(1);
   }
   main(args);

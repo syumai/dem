@@ -1,11 +1,21 @@
-.PHONY: install-local
+SHELL=/bin/bash
+TARGET_SRC=$(shell shopt -s globstar && ls ./*.ts | grep -v ./vendor)
+
+lint:
+	deno fmt --check $(TARGET_SRC)
+
+fmt:
+	deno fmt $(TARGET_SRC)
+
 install-local:
 	deno install --allow-read --allow-write -f dem-local ./cmd.ts
 
-.PHONY: test
 test: test/cmd
+test:
+	deno run --allow-net serve_test.ts
+	deno run --allow-net --allow-read static_test.ts
+	deno run --allow-net helpers_test.ts
 
-.PHONY: test/cmd
 test/cmd:
 	mkdir -p tmp/welcome
 	echo "import './vendor/https/deno.land/std/examples/welcome.ts'" > tmp/welcome/mod.ts
@@ -16,3 +26,7 @@ test/cmd:
 		dem-local prune
 	deno -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
 	rm -rf tmp/welcome
+
+.PHONY: test
+.PHONY: install-local
+.PHONY: test/cmd

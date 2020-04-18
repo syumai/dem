@@ -1,4 +1,4 @@
-import { Module } from './module.ts';
+import { Module } from "./module.ts";
 const { readFile, writeFile } = Deno;
 
 export type Config = {
@@ -6,25 +6,25 @@ export type Config = {
 };
 
 function validateConfig(config: Config) {
-  if (typeof config !== 'object') {
+  if (typeof config !== "object") {
     throw new Error(`config type must be 'object'. actual: '${typeof config}'`);
   }
   if (!Array.isArray(config.modules)) {
     throw new Error(
-      `version type must be Array. actual: '${typeof config.modules}'`
+      `version type must be Array. actual: '${typeof config.modules}'`,
     );
   }
   config.modules.forEach((mod, i) => {
     if (!mod.protocol || !mod.path || !mod.files) {
       throw new Error(
-        `module format is invalid. index: ${i}, protocol: ${mod.protocol}, path: ${mod.path}`
+        `module format is invalid. index: ${i}, protocol: ${mod.protocol}, path: ${mod.path}`,
       );
     }
   });
 }
 
 export async function getConfig(filePath: string): Promise<Config | undefined> {
-  const dec = new TextDecoder('utf-8');
+  const dec = new TextDecoder("utf-8");
   const jsonBody = dec.decode(await readFile(filePath));
   const config = JSON.parse(jsonBody) as Config;
   try {
@@ -34,7 +34,7 @@ export async function getConfig(filePath: string): Promise<Config | undefined> {
     return undefined;
   }
   config.modules = config.modules.map(
-    mod => new Module(mod.protocol, mod.path, mod.version, mod.files)
+    (mod) => new Module(mod.protocol, mod.path, mod.version, mod.files),
   );
   return config;
 }
