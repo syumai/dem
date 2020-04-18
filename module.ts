@@ -5,7 +5,7 @@ export class Module {
     public readonly protocol: string,
     public readonly path: string,
     public version: string,
-    public files: string[]
+    public files: string[],
   ) {}
 
   toString(): string {
@@ -25,6 +25,6 @@ export class Module {
     }
     const path = hostname + result[1];
     const version = result[2];
-    return new Module(protocol.replace(/\:$/, ''), path, version, []);
+    return new Module(protocol.replace(/\:$/, ""), path, version, []);
   };
 }

@@ -1,14 +1,14 @@
 const { cwd, mkdir, writeFile, remove: removeFile, readdir, readFile } = Deno;
 
-import { getConfig, saveConfig, Config } from './config.ts';
-import { Module } from './module.ts';
-import * as path from './vendor/https/deno.land/std/path/mod.ts';
-import { sprintf } from './vendor/https/deno.land/std/fmt/sprintf.ts';
+import { getConfig, saveConfig, Config } from "./config.ts";
+import { Module } from "./module.ts";
+import * as path from "./vendor/https/deno.land/std/path/mod.ts";
+import { sprintf } from "./vendor/https/deno.land/std/fmt/sprintf.ts";
 // @deno-types='https://denopkg.com/syumai/TypeScript@dem/lib/typescript.d.ts';
-import ts from './vendor/https/denopkg.com/syumai/TypeScript/lib/typescript-patched.js';
+import ts from "./vendor/https/denopkg.com/syumai/TypeScript/lib/typescript-patched.js";
 
-const vendorDirectoryPath = 'vendor';
-const dec = new TextDecoder('utf-8');
+const vendorDirectoryPath = "vendor";
+const dec = new TextDecoder("utf-8");
 
 function compareModules(modA: Module, modB: Module): number {
   return modA.path.localeCompare(modB.path);
@@ -20,18 +20,18 @@ function moduleEquals(a: Module, b: Module): boolean {
 
 export async function init(
   version: string,
-  configFilePath: string
+  configFilePath: string,
 ): Promise<void> {
   const config: Config = {
     modules: [],
   };
   await saveConfig(config, configFilePath);
-  console.log('successfully initialized a project.');
+  console.log("successfully initialized a project.");
 }
 
 export async function add(
   configFilePath: string,
-  urlStr: string
+  urlStr: string,
 ): Promise<void> {
   // Validate added module.
   const config = await getConfig(configFilePath);
@@ -44,7 +44,7 @@ export async function add(
     console.error(`failed to parse module: ${urlStr}`);
     return;
   }
-  const foundMod = config.modules.find(mod => {
+  const foundMod = config.modules.find((mod) => {
     return moduleEquals(mod, addedMod);
   });
   if (foundMod) {
@@ -58,23 +58,22 @@ to update module, please use 'dem update'.`);
   config.modules.sort(compareModules);
   await saveConfig(config, configFilePath);
   console.log(
-    `successfully added new module: ${addedMod.toString()}, version: ${
-      addedMod.version
-    }`
+    `successfully added new module: ${addedMod
+      .toString()}, version: ${addedMod.version}`,
   );
 }
 
 export async function link(
   configFilePath: string,
-  urlStr: string
+  urlStr: string,
 ): Promise<void> {
-  await mkdir(vendorDirectoryPath, true);
+  await mkdir(vendorDirectoryPath, { recursive: true });
   const config = await getConfig(configFilePath);
   if (!config) {
     console.error(`failed to get config: ${configFilePath}`);
     return;
   }
-  const foundMod = config.modules.find(mod => {
+  const foundMod = config.modules.find((mod) => {
     return urlStr.startsWith(mod.toString());
   });
   if (!foundMod) {
@@ -93,21 +92,21 @@ export async function link(
     vendorDirectoryPath,
     foundMod.protocol,
     foundMod.path,
-    filePath
+    filePath,
   );
   const dp = path.join(
     vendorDirectoryPath,
     foundMod.protocol,
     foundMod.path,
-    directoryPath
+    directoryPath,
   );
   const script = sprintf(
     "export * from '%s%s';\n",
     foundMod.toStringWithVersion(),
-    filePath
+    filePath,
   );
 
-  await mkdir(dp, true);
+  await mkdir(dp, { recursive: true });
   await writeFile(fp, enc.encode(script));
 
   foundMod.files.push(filePath);
@@ -115,13 +114,13 @@ export async function link(
   saveConfig(config, configFilePath);
 
   console.log(
-    `successfully created alias: ${foundMod.toStringWithVersion()}${filePath}`
+    `successfully created alias: ${foundMod.toStringWithVersion()}${filePath}`,
   );
 }
 
 export async function update(
   configFilePath: string,
-  urlStr: string
+  urlStr: string,
 ): Promise<void> {
   const config = await getConfig(configFilePath);
   if (!config) {
@@ -133,7 +132,7 @@ export async function update(
     console.error(`failed to parse module: ${urlStr}`);
     return;
   }
-  const foundMod = config.modules.find(mod => {
+  const foundMod = config.modules.find((mod) => {
     return moduleEquals(mod, updatedMod);
   });
   if (!foundMod) {
@@ -147,12 +146,12 @@ export async function update(
       vendorDirectoryPath,
       foundMod.protocol,
       foundMod.path,
-      filePath
+      filePath,
     );
     const script = sprintf(
       "export * from '%s%s';\n",
       updatedMod.toStringWithVersion(),
-      filePath
+      filePath,
     );
     await writeFile(fp, enc.encode(script));
   }
@@ -160,15 +159,14 @@ export async function update(
 
   await saveConfig(config, configFilePath);
   console.log(
-    `successfully updated module: ${updatedMod.toString()}, version: ${
-      updatedMod.version
-    }`
+    `successfully updated module: ${updatedMod
+      .toString()}, version: ${updatedMod.version}`,
   );
 }
 
 export async function unlink(
   configFilePath: string,
-  urlStr: string
+  urlStr: string,
 ): Promise<void> {
   // Validate added module.
   const config = await getConfig(configFilePath);
@@ -176,7 +174,7 @@ export async function unlink(
     console.error(`failed to get config: ${configFilePath}`);
     return;
   }
-  const foundMod = config.modules.find(mod => {
+  const foundMod = config.modules.find((mod) => {
     return urlStr.startsWith(mod.toString());
   });
   if (!foundMod) {
@@ -190,7 +188,7 @@ export async function unlink(
     vendorDirectoryPath,
     foundMod.protocol,
     foundMod.path,
-    filePath
+    filePath,
   );
 
   const foundFileIndex = foundMod.files.indexOf(filePath);
@@ -219,7 +217,7 @@ export async function unlink(
 
 export async function remove(
   configFilePath: string,
-  urlStr: string
+  urlStr: string,
 ): Promise<void> {
   // Validate module to remove.
   const config = await getConfig(configFilePath);
@@ -248,7 +246,7 @@ export async function remove(
     vendorDirectoryPath,
     foundMod.protocol,
     foundMod.path,
-    directoryPath
+    directoryPath,
   );
   // TODO: remove parent's blank directories recursive up to vendor
 
@@ -271,43 +269,41 @@ export async function remove(
 }
 
 function removeQuotes(s: string): string {
-  return s.replace(/[\'\"\`]/g, '');
+  return s.replace(/[\'\"\`]/g, "");
 }
 
-const crawlImport = (filePaths: string[], sourceFile: ts.SourceFile) => (
-  node: ts.Node
-) => {
-  if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-    node.forEachChild((child: ts.Node) => {
-      if (child.kind === ts.SyntaxKind.StringLiteral) {
-        filePaths.push(removeQuotes(child.getText(sourceFile)));
-      }
-    });
-  }
-};
+const crawlImport = (filePaths: string[], sourceFile: ts.SourceFile) =>
+  (node: ts.Node) => {
+    if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+      node.forEachChild((child: ts.Node) => {
+        if (child.kind === ts.SyntaxKind.StringLiteral) {
+          filePaths.push(removeQuotes(child.getText(sourceFile)));
+        }
+      });
+    }
+  };
 
 async function getImportFilePaths(
   dirName: string,
-  excludes: string[]
+  excludes: string[],
 ): Promise<string[]> {
-  const files = await readdir(dirName);
   const filePaths: string[] = [];
-  for (const f of files) {
+  for await (const f of readdir(dirName)) {
     if (!f.name) {
       continue;
     }
-    if (f.isFile() && f.name.match(/\.(js|ts)x?$/)) {
+    if (f.isFile && f.name.match(/\.(js|ts)x?$/)) {
       const body = await readFile(path.join(dirName, f.name));
       const sourceFile = ts.createSourceFile(
         f.name,
         dec.decode(body),
-        ts.ScriptTarget.ES2020
+        ts.ScriptTarget.ES2020,
       );
       sourceFile.forEachChild(crawlImport(filePaths, sourceFile));
-    } else if (f.isDirectory() && !excludes.includes(f.name)) {
+    } else if (f.isDirectory && !excludes.includes(f.name)) {
       const result = await getImportFilePaths(
         path.join(dirName, f.name),
-        excludes
+        excludes,
       );
       filePaths.push(...result);
     }
@@ -317,17 +313,17 @@ async function getImportFilePaths(
 
 async function getFormattedImportFilePaths(
   dirName: string,
-  excludes: string[]
+  excludes: string[],
 ): Promise<string[]> {
   return (await getImportFilePaths(dirName, excludes))
-    .filter(f => f.match(/vendor/))
-    .map(f => f.replace(/^.+vendor\//, ''))
-    .map(f => f.replace(/\//, '://'));
+    .filter((f) => f.match(/vendor/))
+    .map((f) => f.replace(/^.+vendor\//, ""))
+    .map((f) => f.replace(/\//, "://"));
 }
 
 export async function ensure(
   configFilePath: string,
-  excludes: string[]
+  excludes: string[],
 ): Promise<void> {
   const imports = await getFormattedImportFilePaths(cwd(), excludes);
   for (const urlStr of imports) {
@@ -337,7 +333,7 @@ export async function ensure(
 
 export async function prune(
   configFilePath: string,
-  excludes: string[]
+  excludes: string[],
 ): Promise<void> {
   let config = await getConfig(configFilePath);
   if (!config) {
