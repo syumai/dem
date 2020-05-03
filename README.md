@@ -18,7 +18,7 @@ export * from 'https://deno.land/x/dejs@0.2.0/mod.ts';
 ## Installation
 
 ```console
-deno install --allow-read --allow-write -f dem https://deno.land/x/dem@0.5.0/cmd.ts
+deno install --allow-read --allow-write -f dem https://deno.land/x/dem@0.6.0/cmd.ts
 ```
 
 ## Usage
