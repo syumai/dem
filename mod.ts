@@ -1,4 +1,4 @@
-const { cwd, mkdir, writeFile, remove: removeFile, readdir, readFile } = Deno;
+const { cwd, mkdir, writeFile, remove: removeFile, readDir, readFile } = Deno;
 
 import { getConfig, saveConfig, Config } from "./config.ts";
 import { Module } from "./module.ts";
@@ -58,8 +58,7 @@ to update module, please use 'dem update'.`);
   config.modules.sort(compareModules);
   await saveConfig(config, configFilePath);
   console.log(
-    `successfully added new module: ${addedMod
-      .toString()}, version: ${addedMod.version}`,
+    `successfully added new module: ${addedMod.toString()}, version: ${addedMod.version}`,
   );
 }
 
@@ -159,8 +158,7 @@ export async function update(
 
   await saveConfig(config, configFilePath);
   console.log(
-    `successfully updated module: ${updatedMod
-      .toString()}, version: ${updatedMod.version}`,
+    `successfully updated module: ${updatedMod.toString()}, version: ${updatedMod.version}`,
   );
 }
 
@@ -288,7 +286,7 @@ async function getImportFilePaths(
   excludes: string[],
 ): Promise<string[]> {
   const filePaths: string[] = [];
-  for await (const f of readdir(dirName)) {
+  for await (const f of readDir(dirName)) {
     if (!f.name) {
       continue;
     }
