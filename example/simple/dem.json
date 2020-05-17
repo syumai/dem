@@ -1,10 +1,9 @@
 {
-  "version": "0.1.0",
   "modules": [
     {
       "protocol": "https",
       "path": "deno.land/std",
-      "version": "v0.16.0",
+      "version": "v0.51.0",
       "files": [
         "/http/server.ts"
       ]
