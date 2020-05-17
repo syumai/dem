@@ -4,8 +4,8 @@ import { getConfig, saveConfig, Config } from "./config.ts";
 import { Module } from "./module.ts";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
 import { sprintf } from "./vendor/https/deno.land/std/fmt/sprintf.ts";
-// @deno-types='https://denopkg.com/syumai/TypeScript@dem/lib/typescript.d.ts';
-import ts from "./vendor/https/denopkg.com/syumai/TypeScript/lib/typescript-patched.js";
+// @deno-types='https://dev.jspm.io/typescript@3.9.2/lib/typescript.d.ts';
+import ts from "./vendor/https/dev.jspm.io/typescript/lib/typescript.js";
 
 const vendorDirectoryPath = "vendor";
 const dec = new TextDecoder("utf-8");

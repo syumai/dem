@@ -12,10 +12,10 @@
     },
     {
       "protocol": "https",
-      "path": "denopkg.com/syumai/TypeScript",
-      "version": "dem",
+      "path": "dev.jspm.io/typescript",
+      "version": "3.9.2",
       "files": [
-        "/lib/typescript-patched.js"
+        "/lib/typescript.js"
       ]
     }
   ]
