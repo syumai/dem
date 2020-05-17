@@ -8,7 +8,7 @@ fmt:
 	deno fmt $(TARGET_SRC)
 
 install-local:
-	deno install --allow-read --allow-write -f dem-local ./cmd.ts
+	deno install --allow-read --allow-write -f -n dem-local ./cmd.ts
 
 test: test/cmd
 
