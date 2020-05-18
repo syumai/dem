@@ -3,6 +3,9 @@ const { readFile, writeFile } = Deno;
 
 export type Config = {
   modules: Module[];
+  aliases: {
+    [name: string]: string;
+  };
 };
 
 function validateConfig(config: Config) {
@@ -21,6 +24,12 @@ function validateConfig(config: Config) {
       );
     }
   });
+  if (typeof config.aliases !== "object") {
+    throw new Error(
+      `config.aliases type must be 'object'. actual: '${typeof config
+        .aliases}'`,
+    );
+  }
 }
 
 export async function getConfig(filePath: string): Promise<Config | undefined> {

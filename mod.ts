@@ -19,11 +19,11 @@ function moduleEquals(a: Module, b: Module): boolean {
 }
 
 export async function init(
-  version: string,
   configFilePath: string,
 ): Promise<void> {
   const config: Config = {
     modules: [],
+    aliases: {},
   };
   await saveConfig(config, configFilePath);
   console.log("successfully initialized a project.");
@@ -113,7 +113,7 @@ export async function link(
   saveConfig(config, configFilePath);
 
   console.log(
-    `successfully created alias: ${foundMod.toStringWithVersion()}${filePath}`,
+    `successfully created link: ${foundMod.toStringWithVersion()}${filePath}`,
   );
 }
 
@@ -180,7 +180,7 @@ export async function unlink(
     return;
   }
 
-  // Remove alias
+  // Remove link
   const filePath = urlStr.split(foundMod.toString())[1];
   const fp = path.join(
     vendorDirectoryPath,
@@ -199,7 +199,7 @@ export async function unlink(
     await removeFile(fp, { recursive: false });
   } catch (e) {
     if (e instanceof Deno.errors.NotFound) {
-      console.error(`alias already removed: ${fp}`);
+      console.error(`link already removed: ${fp}`);
     } else {
       console.error(`failed to remove directory: ${fp}`);
       console.error(e);
@@ -210,7 +210,7 @@ export async function unlink(
   // Update config.
   foundMod.files.splice(foundFileIndex, 1);
   await saveConfig(config, configFilePath);
-  console.log(`successfully removed alias: ${urlStr}`);
+  console.log(`successfully removed link: ${urlStr}`);
 }
 
 export async function remove(
@@ -237,7 +237,7 @@ export async function remove(
     return;
   }
 
-  // Remove alias
+  // Remove link
   const filePath = urlStr.split(foundMod.toString())[1];
   const directoryPath = path.dirname(filePath);
   const dp = path.join(
@@ -252,7 +252,7 @@ export async function remove(
     await removeFile(dp, { recursive: true });
   } catch (e) {
     if (e instanceof Deno.errors.NotFound) {
-      console.error(`alias already removed: ${dp}`);
+      console.error(`link already removed: ${dp}`);
     } else {
       console.error(`failed to remove directory: ${dp}`);
       console.error(e);
@@ -323,9 +323,18 @@ export async function ensure(
   configFilePath: string,
   excludes: string[],
 ): Promise<void> {
+  let config = await getConfig(configFilePath);
+  if (!config) {
+    console.error(`failed to get config: ${configFilePath}`);
+    return;
+  }
   const imports = await getFormattedImportFilePaths(cwd(), excludes);
   for (const urlStr of imports) {
-    await link(configFilePath, urlStr);
+    let s = urlStr;
+    if (config.aliases[urlStr]) {
+      s = config.aliases[urlStr];
+    }
+    await link(configFilePath, s);
   }
 }
 
@@ -341,19 +350,20 @@ export async function prune(
 
   const imports = await getFormattedImportFilePaths(cwd(), excludes);
 
-  // Detect removed aliases
-  const removedAliases: string[] = [];
+  // Detect removed links
+  const removedLinks: string[] = [];
+  const aliasValues = Object.values(config.aliases);
   for (const mod of config.modules) {
     for (const filePath of mod.files) {
       const modUrlStr = `${mod.protocol}://${mod.path}${filePath}`;
-      if (!imports.includes(modUrlStr)) {
-        removedAliases.push(modUrlStr);
+      if (!imports.includes(modUrlStr) && !aliasValues.includes(modUrlStr)) {
+        removedLinks.push(modUrlStr);
       }
     }
   }
 
-  // Remove aliases
-  for (const urlStr of removedAliases) {
+  // Remove links
+  for (const urlStr of removedLinks) {
     await unlink(configFilePath, urlStr);
   }
 
@@ -370,4 +380,103 @@ export async function prune(
       await remove(configFilePath, modulePath);
     }
   }
+}
+
+export async function alias(
+  configFilePath: string,
+  aliasTargetPath: string,
+  aliasPath: string,
+) {
+  await mkdir(vendorDirectoryPath, { recursive: true });
+  const config = await getConfig(configFilePath);
+  if (!config) {
+    console.error(`failed to get config: ${configFilePath}`);
+    return;
+  }
+
+  if (config.aliases[aliasPath]) {
+    console.error(
+      `alias already exists for: ${aliasPath}. please execute dem unalias before this.`,
+    );
+    return;
+  }
+
+  const foundMod = config.modules.find((mod) => {
+    return aliasTargetPath.startsWith(mod.toString());
+  });
+  if (!foundMod) {
+    console.error(`module not found for: ${aliasTargetPath}`);
+    return;
+  }
+
+  const filePath = aliasTargetPath.split(foundMod.toString())[1];
+
+  const enc = new TextEncoder();
+  const fp = path.join(
+    vendorDirectoryPath,
+    aliasPath,
+  );
+  const script = sprintf(
+    "export * from './%s/%s%s';\n",
+    foundMod.protocol,
+    foundMod.path,
+    filePath,
+  );
+
+  await writeFile(fp, enc.encode(script));
+
+  config.aliases[aliasPath] = aliasTargetPath;
+
+  const aliases = Object.entries(config.aliases);
+  aliases.sort((a, b) => {
+    return a[0].localeCompare(b[0]);
+  });
+  config.aliases = Object.fromEntries(aliases);
+  saveConfig(config, configFilePath);
+
+  console.log(
+    `successfully created alias: ${aliasPath} => ${aliasTargetPath}`,
+  );
+}
+
+export async function unalias(
+  configFilePath: string,
+  aliasPath: string,
+) {
+  await mkdir(vendorDirectoryPath, { recursive: true });
+  const config = await getConfig(configFilePath);
+  if (!config) {
+    console.error(`failed to get config: ${configFilePath}`);
+    return;
+  }
+
+  if (!config.aliases[aliasPath]) {
+    console.error(
+      `alias does not exist for: ${aliasPath}.`,
+    );
+    return;
+  }
+
+  // Remove alias
+  const fp = path.join(
+    vendorDirectoryPath,
+    aliasPath,
+  );
+
+  try {
+    await removeFile(fp, { recursive: false });
+  } catch (e) {
+    if (e instanceof Deno.errors.NotFound) {
+      console.error(`alias already removed: ${fp}`);
+    } else {
+      console.error(`failed to remove alias: ${fp}`);
+      console.error(e);
+      return;
+    }
+  }
+
+  // Update config.
+  delete config.aliases[aliasPath];
+  await saveConfig(config, configFilePath);
+  console.log(`successfully removed alias: ${aliasPath}`);
 }
