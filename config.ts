@@ -35,7 +35,11 @@ function validateConfig(config: Config) {
 export async function getConfig(filePath: string): Promise<Config | undefined> {
   const dec = new TextDecoder("utf-8");
   const jsonBody = dec.decode(await readFile(filePath));
-  const config = JSON.parse(jsonBody) as Config;
+  const configObj = JSON.parse(jsonBody);
+  if (!configObj.aliases) {
+    configObj.aliases = {};
+  }
+  const config = configObj as Config;
   try {
     validateConfig(config);
   } catch (e) {
