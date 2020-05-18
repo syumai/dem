@@ -7,17 +7,12 @@
   - linked scripts are stored in `vendor` directory.
 - dem provides an **easy way to update dependencies.**
 
-## Install
-
-```console
-deno install --allow-read --allow-write -f -n dem https://deno.land/x/dem@0.7.0/cmd.ts
-```
-
 ## Example
 
 **Using `https://deno.land/std/http/server.ts` at `v0.51.0`**
 
-- `dem.json` (generated)
+- `dem.json`
+  - generated file like a package.json
 
 ```json
 {
@@ -34,17 +29,25 @@ deno install --allow-read --allow-write -f -n dem https://deno.land/x/dem@0.7.0/
 }
 ```
 
-- `vendor/https/deno.land/std/http/server.ts` (generated)
+- `vendor/https/deno.land/std/http/server.ts`
+  - generated linked script includes version specified in `dem.json`
 
 ```ts
 export * from "https://deno.land/std@v0.51.0/http/server.ts";
 ```
 
-- `example.ts` (script to run)
+- `example.ts`
+  - script to run
 
 ```ts
 // Now you can import module without the version! (because version `v0.51.0` is stored in linked script)
 import { serve } from "./vendor/https/deno.land/std/http/server.ts";
+```
+
+## Install
+
+```console
+deno install --allow-read --allow-write -f -n dem https://deno.land/x/dem@0.7.0/cmd.ts
 ```
 
 ## Usage
@@ -88,9 +91,9 @@ successfully created link: https://deno.land/std@v0.51.0/fs/path.ts
 $ deno example.ts
 ```
 
-### Standard Usage
+## Standard Usage
 
-#### Updating module
+### Updating module
 
 * `dem update` updates versions in `dem.json` and linked scripts.
 
