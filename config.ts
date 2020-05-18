@@ -3,6 +3,9 @@ const { readFile, writeFile } = Deno;
 
 export type Config = {
   modules: Module[];
+  aliases: {
+    [name: string]: string;
+  };
 };
 
 function validateConfig(config: Config) {
@@ -21,12 +24,22 @@ function validateConfig(config: Config) {
       );
     }
   });
+  if (typeof config.aliases !== "object") {
+    throw new Error(
+      `config.aliases type must be 'object'. actual: '${typeof config
+        .aliases}'`,
+    );
+  }
 }
 
 export async function getConfig(filePath: string): Promise<Config | undefined> {
   const dec = new TextDecoder("utf-8");
   const jsonBody = dec.decode(await readFile(filePath));
-  const config = JSON.parse(jsonBody) as Config;
+  const configObj = JSON.parse(jsonBody);
+  if (!configObj.aliases) {
+    configObj.aliases = {};
+  }
+  const config = configObj as Config;
   try {
     validateConfig(config);
   } catch (e) {

@@ -13,6 +13,8 @@ enum SubCommandType {
   Unlink = "unlink",
   Ensure = "ensure",
   Prune = "prune",
+  Alias = "alias",
+  Unalias = "unalias",
 }
 
 function isSubCommandType(t: string): t is SubCommandType {
@@ -39,7 +41,7 @@ async function main(args: string[]): Promise<void> {
       console.log(`dem: ${version}`);
       break;
     case SubCommandType.Init:
-      dem.init(version, defaultConfigFilePath);
+      dem.init(defaultConfigFilePath);
       break;
     case SubCommandType.Add:
       dem.add(defaultConfigFilePath, args[1]);
@@ -61,6 +63,12 @@ async function main(args: string[]): Promise<void> {
       break;
     case SubCommandType.Prune:
       dem.prune(defaultConfigFilePath, excludes);
+      break;
+    case SubCommandType.Alias:
+      dem.alias(defaultConfigFilePath, args[1], args[2]);
+      break;
+    case SubCommandType.Unalias:
+      dem.unalias(defaultConfigFilePath, args[1]);
       break;
   }
 }
