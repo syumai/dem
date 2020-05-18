@@ -40,13 +40,13 @@ export * from "https://deno.land/std@v0.51.0/http/server.ts";
   - script to run
 
 ```ts
-// Now you can import module without the version! (because version `v0.51.0` is stored in linked script)
+// You can import module without the version.
 import { serve } from "./vendor/https/deno.land/std/http/server.ts";
 ```
 
 ## Install
 
-```console
+```sh
 deno install --allow-read --allow-write -f -n dem https://deno.land/x/dem@0.7.0/cmd.ts
 ```
 
@@ -56,14 +56,14 @@ deno install --allow-read --allow-write -f -n dem https://deno.land/x/dem@0.7.0/
 
 #### 1. `dem init` to create `dem.json`
 
-```console
+```sh
 $ dem init
 successfully initialized the project.
 ```
 
 #### 2. `dem add` to add module.
 
-```console
+```sh
 $ dem add https://deno.land/std@v0.51.0
 successfully added new module: https://deno.land/std, version: v0.51.0
 ```
@@ -80,14 +80,14 @@ console.log(path.join(Deno.cwd(), 'example'));
 
 #### 4. `dem ensure` to resolve modules.
 
-```console
+```sh
 $ dem ensure
 successfully created link: https://deno.land/std@v0.51.0/fs/path.ts
 ```
 
 #### 5. Run your script.
 
-```console
+```sh
 $ deno example.ts
 ```
 
@@ -97,7 +97,7 @@ $ deno example.ts
 
 * `dem update` updates versions in `dem.json` and linked scripts.
 
-```console
+```sh
 $ dem update https://deno.land/std@v0.52.0
 successfully updated module: https://deno.land/std, version: v0.52.0
 ```
@@ -119,36 +119,39 @@ import * as dejs from "./vendor/dejs.ts"
 
 #### How to use alias
 
-1. import file with alias path
+1. execute `dem alias`.
+
+```sh
+# create alias for module.
+$ dem alias https://deno.land/x/dejs/mod.ts dejs.ts # ./vendor/dejs.ts will be created.
+```
+
+2. import script using alias path
 
 ```ts
 import * as dejs from "./vendor/dejs.ts"
 ```
 
-2. execute `alias` and `ensure`.
-   - if link is already created, you don't have to execute `ensure`.
+3. run `dem ensure`.
 
-```console
-# create alias for module.
-$ dem alias https://deno.land/x/dejs/mod.ts dejs.ts
-
+```sh
 # create link for `./vendor/https/deno.land/x/dejs/mod.ts`.
 $ dem ensure
 ```
 
 ## Commands
 
-```console
-dem init                                          // initialize dem.json
-dem add https://deno.land/x/dejs@0.1.0            // add module `dejs` and set its version to `0.1.0`
-dem link https://deno.land/x/dejs/mod.ts          // create link of `dejs@0.1.0/mod.ts` and put it into vendor.
-dem update https://deno.land/x/dejs@0.2.0         // update module to `0.2.0`
-dem unlink https://deno.land/x/dejs/mod.ts        // remove link of `dejs@0.2.0/mod.ts`.
-dem remove https://deno.land/x/dejs               // remove module `dejs`
-dem ensure                                        // resolve file paths of added modules used in project and link them.
-dem prune                                         // remove unused modules and linked scripts.
-dem alias https://deno.land/x/dejs/mod.ts dejs.ts // create alias for module and put it into vendor.
-dem unalias dejs.ts                               // remove alias for module.
+```sh
+dem init                                          # initialize dem.json
+dem add https://deno.land/x/dejs@0.1.0            # add module `dejs` and set its version to `0.1.0`
+dem link https://deno.land/x/dejs/mod.ts          # create link of `dejs@0.1.0/mod.ts` and put it into vendor.
+dem update https://deno.land/x/dejs@0.2.0         # update module to `0.2.0`
+dem unlink https://deno.land/x/dejs/mod.ts        # remove link of `dejs@0.2.0/mod.ts`.
+dem remove https://deno.land/x/dejs               # remove module `dejs`
+dem ensure                                        # resolve file paths of added modules used in project and link them.
+dem prune                                         # remove unused modules and linked scripts.
+dem alias https://deno.land/x/dejs/mod.ts dejs.ts # create alias for module and put it into vendor.
+dem unalias dejs.ts                               # remove alias for module.
 ```
 
 ### Unsupported features
