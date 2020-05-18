@@ -126,8 +126,11 @@ import * as dejs from "./vendor/dejs.ts"
    - if link is already created, you don't have to execute `ensure`.
 
 ```console
-$ dem alias https://deno.land/x/dejs/mod.ts dejs.ts // create alias for module.
-$ dem ensure                                        // create link for `./vendor/https/deno.land/x/dejs/mod.ts`.
+# create alias for module.
+$ dem alias https://deno.land/x/dejs/mod.ts dejs.ts
+
+# create link for `./vendor/https/deno.land/x/dejs/mod.ts`.
+$ dem ensure
 ```
 
 ## Commands
