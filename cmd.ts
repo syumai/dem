@@ -1,5 +1,8 @@
-import * as dem from "./mod.ts";
+import { App } from "./mod.ts";
 import { version } from "./version.ts";
+import { StorageRepository } from "./repository.ts";
+import { Store } from "./store.ts";
+import { Config } from "./config.ts";
 
 const defaultConfigFilePath = "dem.json";
 
@@ -34,41 +37,59 @@ async function main(args: string[]): Promise<void> {
     return;
   }
 
-  // const parsedArgs = parse(args.slice(2));
+  const repo = new StorageRepository(defaultConfigFilePath);
+
+  let config: Config;
+  try {
+    config = await repo.loadConfig();
+  } catch (e) {
+    if (!(e instanceof Deno.errors.NotFound)) {
+      console.error(`failed to get config, ${e}`);
+      return;
+    }
+    config = {
+      modules: [],
+      aliases: {},
+    };
+  }
+  const store: Store = { config };
+
+  const dem = new App(store, repo);
+
   const excludes = ["vendor", "node_modules"];
   switch (subCmdType) {
     case SubCommandType.Version:
       console.log(`dem: ${version}`);
       break;
     case SubCommandType.Init:
-      dem.init(defaultConfigFilePath);
+      dem.init();
       break;
     case SubCommandType.Add:
-      dem.add(defaultConfigFilePath, args[1]);
+      dem.addModule(args[1]);
       break;
     case SubCommandType.Link:
-      dem.link(defaultConfigFilePath, args[1]);
+      dem.addLink(args[1]);
       break;
     case SubCommandType.Update:
-      dem.update(defaultConfigFilePath, args[1]);
+      dem.updateModule(args[1]);
       break;
     case SubCommandType.Unlink:
-      dem.unlink(defaultConfigFilePath, args[1]);
+      dem.removeLink(args[1]);
       break;
     case SubCommandType.Remove:
-      dem.remove(defaultConfigFilePath, args[1]);
+      dem.removeModule(args[1]);
       break;
     case SubCommandType.Ensure:
-      dem.ensure(defaultConfigFilePath, excludes);
+      dem.ensure(excludes);
       break;
     case SubCommandType.Prune:
-      dem.prune(defaultConfigFilePath, excludes);
+      dem.prune(excludes);
       break;
     case SubCommandType.Alias:
-      dem.alias(defaultConfigFilePath, args[1], args[2]);
+      dem.addAlias(args[1], args[2]);
       break;
     case SubCommandType.Unalias:
-      dem.unalias(defaultConfigFilePath, args[1]);
+      dem.removeAlias(args[1]);
       break;
   }
 }

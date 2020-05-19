@@ -1,270 +1,24 @@
-const { cwd, mkdir, writeFile, remove: removeFile, readDir, readFile } = Deno;
+const { cwd, readDir, readFile } = Deno;
 
-import { getConfig, saveConfig, Config } from "./config.ts";
 import { Module } from "./module.ts";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
-import { sprintf } from "./vendor/https/deno.land/std/fmt/sprintf.ts";
+import {
+  ADD_MODULE,
+  REMOVE_MODULE,
+  ADD_LINK,
+  REMOVE_LINK,
+  ADD_ALIAS,
+  REMOVE_ALIAS,
+  UPDATE_MODULE,
+  Action,
+} from "./actions.ts";
 // @deno-types='https://dev.jspm.io/typescript@3.9.2/lib/typescript.d.ts';
 import ts from "./vendor/https/dev.jspm.io/typescript/lib/typescript.js";
+import { mutateStore, mutateRepository } from "./mutations.ts";
+import { Store } from "./store.ts";
+import { Repository } from "./repository.ts";
 
-const vendorDirectoryPath = "vendor";
 const dec = new TextDecoder("utf-8");
-
-function compareModules(modA: Module, modB: Module): number {
-  return modA.path.localeCompare(modB.path);
-}
-
-function moduleEquals(a: Module, b: Module): boolean {
-  return a.protocol === b.protocol && a.path === b.path;
-}
-
-export async function init(
-  configFilePath: string,
-): Promise<void> {
-  const config: Config = {
-    modules: [],
-    aliases: {},
-  };
-  await saveConfig(config, configFilePath);
-  console.log("successfully initialized a project.");
-}
-
-export async function add(
-  configFilePath: string,
-  urlStr: string,
-): Promise<void> {
-  // Validate added module.
-  const config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-  const addedMod = Module.parse(urlStr);
-  if (!addedMod) {
-    console.error(`failed to parse module: ${urlStr}`);
-    return;
-  }
-  const foundMod = config.modules.find((mod) => {
-    return moduleEquals(mod, addedMod);
-  });
-  if (foundMod) {
-    console.error(`module already exists: ${urlStr}
-to update module, please use 'dem update'.`);
-    return;
-  }
-
-  // Update config.
-  config.modules.push(addedMod);
-  config.modules.sort(compareModules);
-  await saveConfig(config, configFilePath);
-  console.log(
-    `successfully added new module: ${addedMod.toString()}, version: ${addedMod.version}`,
-  );
-}
-
-export async function link(
-  configFilePath: string,
-  urlStr: string,
-): Promise<void> {
-  await mkdir(vendorDirectoryPath, { recursive: true });
-  const config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-  const foundMod = config.modules.find((mod) => {
-    return urlStr.startsWith(mod.toString());
-  });
-  if (!foundMod) {
-    console.error(`module not found for: ${urlStr}`);
-    return;
-  }
-
-  const filePath = urlStr.split(foundMod.toString())[1];
-  if (foundMod.files.includes(filePath)) {
-    return;
-  }
-
-  const directoryPath = path.dirname(filePath);
-  const enc = new TextEncoder();
-  const fp = path.join(
-    vendorDirectoryPath,
-    foundMod.protocol,
-    foundMod.path,
-    filePath,
-  );
-  const dp = path.join(
-    vendorDirectoryPath,
-    foundMod.protocol,
-    foundMod.path,
-    directoryPath,
-  );
-  const script = sprintf(
-    "export * from '%s%s';\n",
-    foundMod.toStringWithVersion(),
-    filePath,
-  );
-
-  await mkdir(dp, { recursive: true });
-  await writeFile(fp, enc.encode(script));
-
-  foundMod.files.push(filePath);
-  foundMod.files.sort((a, b) => a.localeCompare(b));
-  saveConfig(config, configFilePath);
-
-  console.log(
-    `successfully created link: ${foundMod.toStringWithVersion()}${filePath}`,
-  );
-}
-
-export async function update(
-  configFilePath: string,
-  urlStr: string,
-): Promise<void> {
-  const config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-  const updatedMod = Module.parse(urlStr);
-  if (!updatedMod) {
-    console.error(`failed to parse module: ${urlStr}`);
-    return;
-  }
-  const foundMod = config.modules.find((mod) => {
-    return moduleEquals(mod, updatedMod);
-  });
-  if (!foundMod) {
-    console.error(`module not found for: ${urlStr}`);
-    return;
-  }
-
-  for (const filePath of foundMod.files) {
-    const enc = new TextEncoder();
-    const fp = path.join(
-      vendorDirectoryPath,
-      foundMod.protocol,
-      foundMod.path,
-      filePath,
-    );
-    const script = sprintf(
-      "export * from '%s%s';\n",
-      updatedMod.toStringWithVersion(),
-      filePath,
-    );
-    await writeFile(fp, enc.encode(script));
-  }
-  foundMod.version = updatedMod.version;
-
-  await saveConfig(config, configFilePath);
-  console.log(
-    `successfully updated module: ${updatedMod.toString()}, version: ${updatedMod.version}`,
-  );
-}
-
-export async function unlink(
-  configFilePath: string,
-  urlStr: string,
-): Promise<void> {
-  // Validate added module.
-  const config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-  const foundMod = config.modules.find((mod) => {
-    return urlStr.startsWith(mod.toString());
-  });
-  if (!foundMod) {
-    console.error(`module not found for: ${urlStr}`);
-    return;
-  }
-
-  // Remove link
-  const filePath = urlStr.split(foundMod.toString())[1];
-  const fp = path.join(
-    vendorDirectoryPath,
-    foundMod.protocol,
-    foundMod.path,
-    filePath,
-  );
-
-  const foundFileIndex = foundMod.files.indexOf(filePath);
-  if (foundFileIndex < 0) {
-    console.error(`file not found: ${filePath}`);
-    return;
-  }
-
-  try {
-    await removeFile(fp, { recursive: false });
-  } catch (e) {
-    if (e instanceof Deno.errors.NotFound) {
-      console.error(`link already removed: ${fp}`);
-    } else {
-      console.error(`failed to remove directory: ${fp}`);
-      console.error(e);
-      return;
-    }
-  }
-
-  // Update config.
-  foundMod.files.splice(foundFileIndex, 1);
-  await saveConfig(config, configFilePath);
-  console.log(`successfully removed link: ${urlStr}`);
-}
-
-export async function remove(
-  configFilePath: string,
-  urlStr: string,
-): Promise<void> {
-  // Validate module to remove.
-  const config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-  let foundModIndex = 0;
-  let foundMod: Module | undefined;
-  for (const mod of config.modules) {
-    if (urlStr.startsWith(mod.toString())) {
-      foundMod = mod;
-      break;
-    }
-    foundModIndex++;
-  }
-  if (!foundMod) {
-    console.error(`module not found for: ${urlStr}`);
-    return;
-  }
-
-  // Remove link
-  const filePath = urlStr.split(foundMod.toString())[1];
-  const directoryPath = path.dirname(filePath);
-  const dp = path.join(
-    vendorDirectoryPath,
-    foundMod.protocol,
-    foundMod.path,
-    directoryPath,
-  );
-  // TODO: remove parent's blank directories recursive up to vendor
-
-  try {
-    await removeFile(dp, { recursive: true });
-  } catch (e) {
-    if (e instanceof Deno.errors.NotFound) {
-      console.error(`link already removed: ${dp}`);
-    } else {
-      console.error(`failed to remove directory: ${dp}`);
-      console.error(e);
-      return;
-    }
-  }
-
-  // Update config.
-  config.modules.splice(foundModIndex, 1);
-  await saveConfig(config, configFilePath);
-  console.log(`successfully removed module: ${urlStr}`);
-}
 
 function removeQuotes(s: string): string {
   return s.replace(/[\'\"\`]/g, "");
@@ -319,164 +73,244 @@ async function getFormattedImportFilePaths(
     .map((f) => f.replace(/\//, "://"));
 }
 
-export async function ensure(
-  configFilePath: string,
-  excludes: string[],
-): Promise<void> {
-  let config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-  const imports = await getFormattedImportFilePaths(cwd(), excludes);
-  for (const urlStr of imports) {
-    let s = urlStr;
-    if (config.aliases[urlStr]) {
-      s = config.aliases[urlStr];
-    }
-    await link(configFilePath, s);
-  }
-}
+export class App {
+  constructor(
+    public store: Store,
+    private repo: Repository,
+  ) {}
 
-export async function prune(
-  configFilePath: string,
-  excludes: string[],
-): Promise<void> {
-  let config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
+  async init(): Promise<void> {
+    await this.repo.saveConfig({
+      modules: [],
+      aliases: {},
+    });
+    console.log("successfully initialized dem.json");
   }
 
-  const imports = await getFormattedImportFilePaths(cwd(), excludes);
-
-  // Detect removed links
-  const removedLinks: string[] = [];
-  const aliasValues = Object.values(config.aliases);
-  for (const mod of config.modules) {
-    for (const filePath of mod.files) {
-      const modUrlStr = `${mod.protocol}://${mod.path}${filePath}`;
-      if (!imports.includes(modUrlStr) && !aliasValues.includes(modUrlStr)) {
-        removedLinks.push(modUrlStr);
-      }
-    }
-  }
-
-  // Remove links
-  for (const urlStr of removedLinks) {
-    await unlink(configFilePath, urlStr);
-  }
-
-  // Reload config
-  config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-
-  for (const mod of config.modules) {
-    if (mod.files.length === 0) {
-      const modulePath = `${mod.protocol}://${mod.path}`;
-      await remove(configFilePath, modulePath);
-    }
-  }
-}
-
-export async function alias(
-  configFilePath: string,
-  aliasTargetPath: string,
-  aliasPath: string,
-) {
-  await mkdir(vendorDirectoryPath, { recursive: true });
-  const config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-
-  if (config.aliases[aliasPath]) {
-    console.error(
-      `alias already exists for: ${aliasPath}. please execute dem unalias before this.`,
-    );
-    return;
-  }
-
-  const foundMod = config.modules.find((mod) => {
-    return aliasTargetPath.startsWith(mod.toString());
-  });
-  if (!foundMod) {
-    console.error(`module not found for: ${aliasTargetPath}`);
-    return;
-  }
-
-  const filePath = aliasTargetPath.split(foundMod.toString())[1];
-
-  const enc = new TextEncoder();
-  const fp = path.join(
-    vendorDirectoryPath,
-    aliasPath,
-  );
-  const script = sprintf(
-    "export * from './%s/%s%s';\n",
-    foundMod.protocol,
-    foundMod.path,
-    filePath,
-  );
-
-  await writeFile(fp, enc.encode(script));
-
-  config.aliases[aliasPath] = aliasTargetPath;
-
-  const aliases = Object.entries(config.aliases);
-  aliases.sort((a, b) => {
-    return a[0].localeCompare(b[0]);
-  });
-  config.aliases = Object.fromEntries(aliases);
-  saveConfig(config, configFilePath);
-
-  console.log(
-    `successfully created alias: ${aliasPath} => ${aliasTargetPath}`,
-  );
-}
-
-export async function unalias(
-  configFilePath: string,
-  aliasPath: string,
-) {
-  await mkdir(vendorDirectoryPath, { recursive: true });
-  const config = await getConfig(configFilePath);
-  if (!config) {
-    console.error(`failed to get config: ${configFilePath}`);
-    return;
-  }
-
-  if (!config.aliases[aliasPath]) {
-    console.error(
-      `alias does not exist for: ${aliasPath}.`,
-    );
-    return;
-  }
-
-  // Remove alias
-  const fp = path.join(
-    vendorDirectoryPath,
-    aliasPath,
-  );
-
-  try {
-    await removeFile(fp, { recursive: false });
-  } catch (e) {
-    if (e instanceof Deno.errors.NotFound) {
-      console.error(`alias already removed: ${fp}`);
-    } else {
-      console.error(`failed to remove alias: ${fp}`);
-      console.error(e);
+  async addModule(urlStr: string): Promise<void> {
+    let module: Module;
+    try {
+      module = Module.parse(urlStr);
+    } catch (e) {
+      console.error(e.toString());
       return;
     }
+
+    await this.commit([
+      {
+        type: ADD_MODULE,
+        payload: { module },
+      },
+    ]);
+
+    console.log(
+      `successfully added new module: ${module.toString()}, version: ${module.version}`,
+    );
   }
 
-  // Update config.
-  delete config.aliases[aliasPath];
-  await saveConfig(config, configFilePath);
-  console.log(`successfully removed alias: ${aliasPath}`);
+  async removeModule(urlStr: string): Promise<void> {
+    let module: Module;
+    try {
+      module = Module.parse(urlStr);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
+
+    await this.commit([
+      {
+        type: REMOVE_MODULE,
+        payload: {
+          moduleProtocol: module.protocol,
+          modulePath: module.path,
+        },
+      },
+    ]);
+
+    console.log(`successfully removed module: ${urlStr}`);
+  }
+
+  async addLink(urlStr: string): Promise<void> {
+    await this.commit([
+      {
+        type: ADD_LINK,
+        payload: {
+          link: urlStr,
+        },
+      },
+    ]);
+
+    console.log(`successfully created link: ${urlStr}`);
+  }
+
+  async removeLink(urlStr: string): Promise<void> {
+    await this.commit([
+      {
+        type: REMOVE_LINK,
+        payload: {
+          link: urlStr,
+        },
+      },
+    ]);
+    console.log(`successfully removed link: ${urlStr}`);
+  }
+
+  async addAlias(aliasTargetPath: string, aliasPath: string): Promise<void> {
+    await this.commit([
+      {
+        type: ADD_ALIAS,
+        payload: {
+          aliasPath,
+          aliasTargetPath,
+        },
+      },
+    ]);
+
+    console.log(
+      `successfully created alias: ${aliasPath} => ${aliasTargetPath}`,
+    );
+  }
+
+  async removeAlias(aliasPath: string): Promise<void> {
+    await this.commit([
+      {
+        type: REMOVE_ALIAS,
+        payload: {
+          aliasPath,
+        },
+      },
+    ]);
+
+    console.log(`successfully removed alias: ${aliasPath}`);
+  }
+
+  async updateModule(urlStr: string): Promise<void> {
+    const updatedMod = Module.parse(urlStr);
+    if (!updatedMod) {
+      console.error(`failed to parse module: ${urlStr}`);
+      return;
+    }
+
+    await this.commit([
+      {
+        type: UPDATE_MODULE,
+        payload: {
+          moduleProtocol: updatedMod.protocol,
+          modulePath: updatedMod.path,
+          moduleVersion: updatedMod.version,
+        },
+      },
+    ]);
+
+    console.log(
+      `successfully updated module: ${updatedMod.toString()}, version: ${updatedMod.version}`,
+    );
+  }
+
+  async ensure(excludes: string[]): Promise<void> {
+    const imports = await getFormattedImportFilePaths(cwd(), excludes);
+    const actions: Action[] = [];
+    for (const urlStr of imports) {
+      let link = urlStr;
+      if (this.store.config.aliases[urlStr]) {
+        link = this.store.config.aliases[urlStr];
+      }
+      actions.push({
+        type: ADD_LINK,
+        payload: {
+          link,
+        },
+      });
+    }
+
+    await this.commit(actions);
+    console.log(`succeeded to resolve modules`);
+  }
+
+  async prune(excludes: string[]): Promise<void> {
+    const imports = await getFormattedImportFilePaths(cwd(), excludes);
+
+    // Detect removed links
+    const removedLinks: string[] = [];
+    const aliasValues = Object.values(this.store.config.aliases);
+    for (const mod of this.store.config.modules) {
+      for (const filePath of mod.files) {
+        const modUrlStr = `${mod.protocol}://${mod.path}${filePath}`;
+        if (!imports.includes(modUrlStr) && !aliasValues.includes(modUrlStr)) {
+          removedLinks.push(modUrlStr);
+        }
+      }
+    }
+
+    const removeLinkActions: Action[] = [];
+    // Remove links
+    for (const link of removedLinks) {
+      removeLinkActions.push({
+        type: REMOVE_LINK,
+        payload: {
+          link,
+        },
+      });
+    }
+
+    try {
+      this.store = mutateStore(this.store, removeLinkActions);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
+
+    const removeModuleActions: Action[] = [];
+    for (const mod of this.store.config.modules) {
+      if (mod.files.length === 0) {
+        removeModuleActions.push({
+          type: REMOVE_MODULE,
+          payload: {
+            moduleProtocol: mod.protocol,
+            modulePath: mod.path,
+          },
+        });
+      }
+    }
+
+    try {
+      this.store = mutateStore(this.store, removeModuleActions);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
+
+    const actions: Action[] = [
+      ...removeLinkActions,
+      ...removeModuleActions,
+    ];
+
+    try {
+      await mutateRepository(this.repo, this.store, actions);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
+
+    await this.repo.saveConfig(this.store.config);
+    console.log(`succeeded to prune modules`);
+  }
+
+  async commit(actions: Action[]) {
+    try {
+      this.store = mutateStore(this.store, actions);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
+
+    try {
+      await mutateRepository(this.repo, this.store, actions);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
+
+    await this.repo.saveConfig(this.store.config);
+  }
 }
