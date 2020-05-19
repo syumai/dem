@@ -82,7 +82,7 @@ export class StorageRepository {
       directoryPath,
     );
     const script = sprintf(
-      "export * from '%s://%s@%s%s';\n",
+      'export * from "%s://%s@%s%s";\n',
       moduleProtocol,
       modulePath,
       moduleVersion,
@@ -133,7 +133,7 @@ export class StorageRepository {
       aliasDirectoryPath,
     );
     const script = sprintf(
-      "export * from './%s/%s%s';\n",
+      'export * from "./%s/%s%s";\n',
       moduleProtocol,
       modulePath,
       filePath,
@@ -174,7 +174,7 @@ export class StorageRepository {
       filePath,
     );
     const script = sprintf(
-      "export * from '%s://%s@%s%s';\n",
+      'export * from "%s://%s@%s%s";\n',
       moduleProtocol,
       modulePath,
       moduleVersion,
