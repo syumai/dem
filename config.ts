@@ -1,5 +1,4 @@
 import { Module } from "./module.ts";
-const { readFile, writeFile } = Deno;
 
 export type Config = {
   modules: Module[];
@@ -8,7 +7,7 @@ export type Config = {
   };
 };
 
-function validateConfig(config: Config) {
+export function validateConfig(config: Config) {
   if (typeof config !== "object") {
     throw new Error(`config type must be 'object'. actual: '${typeof config}'`);
   }
@@ -30,30 +29,4 @@ function validateConfig(config: Config) {
         .aliases}'`,
     );
   }
-}
-
-export async function getConfig(filePath: string): Promise<Config | undefined> {
-  const dec = new TextDecoder("utf-8");
-  const jsonBody = dec.decode(await readFile(filePath));
-  const configObj = JSON.parse(jsonBody);
-  if (!configObj.aliases) {
-    configObj.aliases = {};
-  }
-  const config = configObj as Config;
-  try {
-    validateConfig(config);
-  } catch (e) {
-    console.error(e);
-    return undefined;
-  }
-  config.modules = config.modules.map(
-    (mod) => new Module(mod.protocol, mod.path, mod.version, mod.files),
-  );
-  return config;
-}
-
-export async function saveConfig(config: Config, filePath: string) {
-  const enc = new TextEncoder();
-  const jsonBody = JSON.stringify(config, undefined, 2);
-  await writeFile(filePath, enc.encode(jsonBody));
 }

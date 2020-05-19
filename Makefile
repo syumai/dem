@@ -13,6 +13,7 @@ install-local:
 test: test/cmd
 
 test/cmd:
+	# test ensure / prune
 	mkdir -p tmp/welcome
 	echo "import './vendor/welcome.ts'" > tmp/welcome/mod.ts
 	cd tmp/welcome && \
@@ -22,6 +23,18 @@ test/cmd:
 		dem-local ensure && \
 		dem-local prune
 	deno run -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
+
+	# test unlink / link
+	rm tmp/welcome/mod.ts
+	echo "import './vendor/https/deno.land/std/examples/welcome.ts'" > tmp/welcome/mod.ts
+	cd tmp/welcome && \
+		dem-local unalias welcome.ts && \
+		dem-local unlink https://deno.land/std/examples/welcome.ts && \
+		dem-local remove https://deno.land/std && \
+		dem-local add https://deno.land/std@v0.35.0 && \
+		dem-local link https://deno.land/std/examples/welcome.ts
+	deno run -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
+
 	rm -rf tmp/welcome
 
 .PHONY: lint fmt install-local test test/cmd
