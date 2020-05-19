@@ -8,13 +8,9 @@ import {
   UPDATE_MODULE,
   Action,
 } from "./actions.ts";
-import { sprintf } from "./vendor/https/deno.land/std/fmt/sprintf.ts";
 import { Store, duplicateStore } from "./store.ts";
 import { Module, moduleEquals, compareModules } from "./module.ts";
 import { Repository } from "./repository.ts";
-import * as path from "./vendor/https/deno.land/std/path/mod.ts";
-
-const vendorDirectoryPath = "vendor";
 
 // mutateStore mutates store. This affects only for memory.
 export function mutateStore(store: Store, actions: Action[]): Store {
@@ -166,22 +162,7 @@ export async function mutateRepository(
 
       case REMOVE_MODULE: {
         const { moduleProtocol, modulePath } = action.payload;
-        // Remove module directory
-        const dp = path.join(
-          vendorDirectoryPath,
-          moduleProtocol,
-          modulePath,
-        );
-
-        try {
-          await Deno.remove(dp, { recursive: true });
-        } catch (e) {
-          if (e instanceof Deno.errors.NotFound) {
-            throw new Error(`module already removed: ${dp}`);
-          } else {
-            throw new Error(`failed to remove directory: ${dp}, ${e}`);
-          }
-        }
+        await repository.removeModule(moduleProtocol, modulePath);
         break;
       }
 
@@ -195,31 +176,13 @@ export async function mutateRepository(
           throw new Error(`module not found for: ${link}`);
         }
 
-        // create file path
         const filePath = link.split(foundMod.toString())[1];
-        const directoryPath = path.dirname(filePath);
-        const enc = new TextEncoder();
-        const fp = path.join(
-          vendorDirectoryPath,
+        await repository.addLink(
           foundMod.protocol,
           foundMod.path,
+          foundMod.version,
           filePath,
         );
-        const dp = path.join(
-          vendorDirectoryPath,
-          foundMod.protocol,
-          foundMod.path,
-          directoryPath,
-        );
-        const script = sprintf(
-          "export * from '%s%s';\n",
-          foundMod.toStringWithVersion(),
-          filePath,
-        );
-
-        // create directories and file
-        await Deno.mkdir(dp, { recursive: true });
-        await Deno.writeFile(fp, enc.encode(script));
         break;
       }
 
@@ -234,30 +197,17 @@ export async function mutateRepository(
 
         // create file path
         const filePath = link.split(foundMod.toString())[1];
-        const fp = path.join(
-          vendorDirectoryPath,
+        await repository.removeLink(
           foundMod.protocol,
           foundMod.path,
           filePath,
         );
-
-        // remove link
-        try {
-          await Deno.remove(fp, { recursive: false });
-        } catch (e) {
-          if (e instanceof Deno.errors.NotFound) {
-            throw new Error(`link already removed: ${fp}`);
-          } else {
-            throw new Error(`failed to remove directory: ${fp}, ${e}`);
-          }
-        }
         break;
       }
 
       case ADD_ALIAS: {
         const { aliasPath, aliasTargetPath } = action.payload;
 
-        await Deno.mkdir(vendorDirectoryPath, { recursive: true });
         const foundMod = modules.find((mod) => {
           return aliasTargetPath.startsWith(mod.toString());
         });
@@ -265,49 +215,21 @@ export async function mutateRepository(
           throw new Error(`module not found for: ${aliasTargetPath}`);
         }
 
-        const aliasDirectoryPath = path.dirname(aliasPath);
         const linkedFilePath = aliasTargetPath.split(foundMod.toString())[1];
-
-        const enc = new TextEncoder();
-        const fp = path.join(
-          vendorDirectoryPath,
-          aliasPath,
-        );
-        const dp = path.join(
-          vendorDirectoryPath,
-          aliasDirectoryPath,
-        );
-        const script = sprintf(
-          "export * from './%s/%s%s';\n",
+        await repository.addAlias(
           foundMod.protocol,
           foundMod.path,
           linkedFilePath,
+          aliasPath,
         );
-
-        // create directories and file
-        await Deno.mkdir(dp, { recursive: true });
-        await Deno.writeFile(fp, enc.encode(script));
         break;
       }
 
       case REMOVE_ALIAS: {
         const { aliasPath } = action.payload;
-
-        // Remove alias
-        const fp = path.join(
-          vendorDirectoryPath,
+        await repository.removeAlias(
           aliasPath,
         );
-
-        try {
-          await Deno.remove(fp, { recursive: false });
-        } catch (e) {
-          if (e instanceof Deno.errors.NotFound) {
-            throw new Error(`alias already removed: ${fp}`);
-          } else {
-            throw new Error(`failed to remove alias: ${fp}, ${e}`);
-          }
-        }
         break;
       }
 
@@ -322,21 +244,12 @@ export async function mutateRepository(
         }
 
         for (const filePath of foundMod.files) {
-          const enc = new TextEncoder();
-          const fp = path.join(
-            vendorDirectoryPath,
-            moduleProtocol,
-            modulePath,
-            filePath,
-          );
-          const script = sprintf(
-            "export * from '%s://%s@%s%s';\n",
+          await repository.updateLink(
             moduleProtocol,
             modulePath,
             moduleVersion,
             filePath,
           );
-          await Deno.writeFile(fp, enc.encode(script));
         }
         break;
       }
