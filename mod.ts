@@ -96,12 +96,17 @@ export class App {
       return;
     }
 
-    await this.commit([
-      {
-        type: ADD_MODULE,
-        payload: { module },
-      },
-    ]);
+    try {
+      await this.commit([
+        {
+          type: ADD_MODULE,
+          payload: { module },
+        },
+      ]);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
 
     console.log(
       `successfully added new module: ${module.toString()}, version: ${module.version}`,
@@ -117,54 +122,75 @@ export class App {
       return;
     }
 
-    await this.commit([
-      {
-        type: REMOVE_MODULE,
-        payload: {
-          moduleProtocol: module.protocol,
-          modulePath: module.path,
+    try {
+      await this.commit([
+        {
+          type: REMOVE_MODULE,
+          payload: {
+            moduleProtocol: module.protocol,
+            modulePath: module.path,
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
 
     console.log(`successfully removed module: ${urlStr}`);
   }
 
   async addLink(urlStr: string): Promise<void> {
-    await this.commit([
-      {
-        type: ADD_LINK,
-        payload: {
-          link: urlStr,
+    try {
+      await this.commit([
+        {
+          type: ADD_LINK,
+          payload: {
+            link: urlStr,
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
 
     console.log(`successfully created link: ${urlStr}`);
   }
 
   async removeLink(urlStr: string): Promise<void> {
-    await this.commit([
-      {
-        type: REMOVE_LINK,
-        payload: {
-          link: urlStr,
+    try {
+      await this.commit([
+        {
+          type: REMOVE_LINK,
+          payload: {
+            link: urlStr,
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
+
     console.log(`successfully removed link: ${urlStr}`);
   }
 
   async addAlias(aliasTargetPath: string, aliasPath: string): Promise<void> {
-    await this.commit([
-      {
-        type: ADD_ALIAS,
-        payload: {
-          aliasPath,
-          aliasTargetPath,
+    try {
+      await this.commit([
+        {
+          type: ADD_ALIAS,
+          payload: {
+            aliasPath,
+            aliasTargetPath,
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
 
     console.log(
       `successfully created alias: ${aliasPath} => ${aliasTargetPath}`,
@@ -172,14 +198,19 @@ export class App {
   }
 
   async removeAlias(aliasPath: string): Promise<void> {
-    await this.commit([
-      {
-        type: REMOVE_ALIAS,
-        payload: {
-          aliasPath,
+    try {
+      await this.commit([
+        {
+          type: REMOVE_ALIAS,
+          payload: {
+            aliasPath,
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
 
     console.log(`successfully removed alias: ${aliasPath}`);
   }
@@ -191,16 +222,21 @@ export class App {
       return;
     }
 
-    await this.commit([
-      {
-        type: UPDATE_MODULE,
-        payload: {
-          moduleProtocol: updatedMod.protocol,
-          modulePath: updatedMod.path,
-          moduleVersion: updatedMod.version,
+    try {
+      await this.commit([
+        {
+          type: UPDATE_MODULE,
+          payload: {
+            moduleProtocol: updatedMod.protocol,
+            modulePath: updatedMod.path,
+            moduleVersion: updatedMod.version,
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (e) {
+      console.error(e.toString());
+      return;
+    }
 
     console.log(
       `successfully updated module: ${updatedMod.toString()}, version: ${updatedMod.version}`,
@@ -297,20 +333,8 @@ export class App {
   }
 
   async commit(actions: Action[]) {
-    try {
-      this.store = mutateStore(this.store, actions);
-    } catch (e) {
-      console.error(e.toString());
-      return;
-    }
-
-    try {
-      await mutateRepository(this.repo, this.store, actions);
-    } catch (e) {
-      console.error(e.toString());
-      return;
-    }
-
+    this.store = mutateStore(this.store, actions);
+    await mutateRepository(this.repo, this.store, actions);
     await this.repo.saveConfig(this.store.config);
   }
 }
