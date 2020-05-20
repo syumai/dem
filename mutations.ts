@@ -11,6 +11,11 @@ import {
 import { Store, duplicateStore } from "./store.ts";
 import { Module, moduleEquals, compareModules } from "./module.ts";
 import { Repository } from "./repository.ts";
+import { createURL } from "./net.ts";
+import * as path from "./vendor/https/deno.land/std/path/mod.ts";
+import { hasDefaultExportLocal, hasDefaultExportRemote } from "./ast.ts";
+
+const vendorDirectoryPath = "vendor";
 
 // mutateStore mutates store. This affects only for memory.
 export function mutateStore(store: Store, actions: Action[]): Store {
@@ -60,7 +65,7 @@ to update module, please use 'dem update'.`);
         }
         const filePath = link.split(foundMod.toString())[1];
         if (foundMod.files.includes(filePath)) {
-          throw new Error(`file already linked: ${link}`);
+          break;
         }
         foundMod.files.push(filePath);
         break;
@@ -177,11 +182,20 @@ export async function mutateRepository(
         }
 
         const filePath = link.split(foundMod.toString())[1];
+        const url = createURL(
+          foundMod.protocol,
+          foundMod.path,
+          foundMod.version,
+          filePath,
+        );
+        const hasDefault = await hasDefaultExportRemote(url);
+
         await repository.addLink(
           foundMod.protocol,
           foundMod.path,
           foundMod.version,
           filePath,
+          hasDefault,
         );
         break;
       }
@@ -216,11 +230,30 @@ export async function mutateRepository(
         }
 
         const linkedFilePath = aliasTargetPath.split(foundMod.toString())[1];
+
+        const fp = path.join(
+          vendorDirectoryPath,
+          foundMod.protocol,
+          foundMod.path,
+          linkedFilePath,
+        );
+
+        let hasDefault = false;
+        try {
+          hasDefault = await hasDefaultExportLocal(fp);
+        } catch (e) {
+          if (!(e instanceof Deno.errors.NotFound)) {
+            throw e;
+          }
+          // let has default as false
+        }
+
         await repository.addAlias(
           foundMod.protocol,
           foundMod.path,
           linkedFilePath,
           aliasPath,
+          hasDefault,
         );
         break;
       }
@@ -244,11 +277,20 @@ export async function mutateRepository(
         }
 
         for (const filePath of foundMod.files) {
+          const url = createURL(
+            moduleProtocol,
+            modulePath,
+            moduleVersion,
+            filePath,
+          );
+          const hasDefault = await hasDefaultExportRemote(url);
+
           await repository.updateLink(
             moduleProtocol,
             modulePath,
             moduleVersion,
             filePath,
+            hasDefault,
           );
         }
         break;
