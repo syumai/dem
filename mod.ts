@@ -1,7 +1,6 @@
-const { cwd, readDir, readFile } = Deno;
+const { cwd } = Deno;
 
 import { Module } from "./module.ts";
-import * as path from "./vendor/https/deno.land/std/path/mod.ts";
 import {
   ADD_MODULE,
   REMOVE_MODULE,
@@ -12,66 +11,10 @@ import {
   UPDATE_MODULE,
   Action,
 } from "./actions.ts";
-// @deno-types='https://dev.jspm.io/typescript@3.9.2/lib/typescript.d.ts';
-import ts from "./vendor/https/dev.jspm.io/typescript/lib/typescript.js";
 import { mutateStore, mutateRepository } from "./mutations.ts";
 import { Store } from "./store.ts";
 import { Repository } from "./repository.ts";
-
-const dec = new TextDecoder("utf-8");
-
-function removeQuotes(s: string): string {
-  return s.replace(/[\'\"\`]/g, "");
-}
-
-const crawlImport = (filePaths: string[], sourceFile: ts.SourceFile) =>
-  (node: ts.Node) => {
-    if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-      node.forEachChild((child: ts.Node) => {
-        if (child.kind === ts.SyntaxKind.StringLiteral) {
-          filePaths.push(removeQuotes(child.getText(sourceFile)));
-        }
-      });
-    }
-  };
-
-async function getImportFilePaths(
-  dirName: string,
-  excludes: string[],
-): Promise<string[]> {
-  const filePaths: string[] = [];
-  for await (const f of readDir(dirName)) {
-    if (!f.name) {
-      continue;
-    }
-    if (f.isFile && f.name.match(/\.(js|ts)x?$/)) {
-      const body = await readFile(path.join(dirName, f.name));
-      const sourceFile = ts.createSourceFile(
-        f.name,
-        dec.decode(body),
-        ts.ScriptTarget.ES2020,
-      );
-      sourceFile.forEachChild(crawlImport(filePaths, sourceFile));
-    } else if (f.isDirectory && !excludes.includes(f.name)) {
-      const result = await getImportFilePaths(
-        path.join(dirName, f.name),
-        excludes,
-      );
-      filePaths.push(...result);
-    }
-  }
-  return filePaths;
-}
-
-async function getFormattedImportFilePaths(
-  dirName: string,
-  excludes: string[],
-): Promise<string[]> {
-  return (await getImportFilePaths(dirName, excludes))
-    .filter((f) => f.match(/vendor/))
-    .map((f) => f.replace(/^.+vendor\//, ""))
-    .map((f) => f.replace(/\//, "://"));
-}
+import { getFormattedImportFilePaths } from "./ast.ts";
 
 export class App {
   constructor(

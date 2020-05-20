@@ -2,6 +2,7 @@ import { Config, validateConfig } from "./config.ts";
 import { Module } from "./module.ts";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
 import { sprintf } from "./vendor/https/deno.land/std/fmt/sprintf.ts";
+import { createURL } from "./net.ts";
 
 const vendorDirectoryPath = "vendor";
 
@@ -12,6 +13,7 @@ export type Repository = {
     modulePath: string,
     moduleVersion: string,
     filePath: string,
+    hasDefaultExport: boolean,
   ): Promise<void>;
   removeLink(
     moduleProtocol: string,
@@ -23,6 +25,7 @@ export type Repository = {
     modulePath: string,
     filePath: string,
     aliasPath: string,
+    hasDefaultExport: boolean,
   ): Promise<void>;
   removeAlias(aliasPath: string): Promise<void>;
   updateLink(
@@ -30,6 +33,7 @@ export type Repository = {
     modulePath: string,
     moduleVersion: string,
     filePath: string,
+    hasDefaultExport: boolean,
   ): Promise<void>;
   loadConfig(): Promise<Config>;
   saveConfig(config: Config): void;
@@ -67,6 +71,7 @@ export class StorageRepository {
     modulePath: string,
     moduleVersion: string,
     filePath: string,
+    hasDefaultExport: boolean,
   ): Promise<void> {
     const directoryPath = path.dirname(filePath);
     const fp = path.join(
@@ -81,13 +86,11 @@ export class StorageRepository {
       modulePath,
       directoryPath,
     );
-    const script = sprintf(
-      'export * from "%s://%s@%s%s";\n',
-      moduleProtocol,
-      modulePath,
-      moduleVersion,
-      filePath,
-    );
+    const url = createURL(moduleProtocol, modulePath, moduleVersion, filePath);
+    let script = sprintf('export * from "%s";\n', url);
+    if (hasDefaultExport) {
+      script += sprintf('export { default } from "%s";\n', url);
+    }
 
     // create directories and file
     await Deno.mkdir(dp, { recursive: true });
@@ -122,6 +125,7 @@ export class StorageRepository {
     modulePath: string,
     filePath: string,
     aliasPath: string,
+    hasDefaultExport: boolean,
   ): Promise<void> {
     const aliasDirectoryPath = path.dirname(aliasPath);
     const fp = path.join(
@@ -132,12 +136,11 @@ export class StorageRepository {
       vendorDirectoryPath,
       aliasDirectoryPath,
     );
-    const script = sprintf(
-      'export * from "./%s/%s%s";\n',
-      moduleProtocol,
-      modulePath,
-      filePath,
-    );
+    const aliasTargetPath = `./${moduleProtocol}/${modulePath}/${filePath}`;
+    let script = sprintf('export * from "%s";\n', aliasTargetPath);
+    if (hasDefaultExport) {
+      script += sprintf('export { default } from "%s";\n', aliasTargetPath);
+    }
 
     // create directories and file
     await Deno.mkdir(dp, { recursive: true });
@@ -166,6 +169,7 @@ export class StorageRepository {
     modulePath: string,
     moduleVersion: string,
     filePath: string,
+    hasDefaultExport: boolean,
   ): Promise<void> {
     const fp = path.join(
       vendorDirectoryPath,
@@ -173,13 +177,11 @@ export class StorageRepository {
       modulePath,
       filePath,
     );
-    const script = sprintf(
-      'export * from "%s://%s@%s%s";\n',
-      moduleProtocol,
-      modulePath,
-      moduleVersion,
-      filePath,
-    );
+    const url = createURL(moduleProtocol, modulePath, moduleVersion, filePath);
+    let script = sprintf('export * from "%s";\n', url);
+    if (hasDefaultExport) {
+      script += sprintf('export { default } from "%s";\n', url);
+    }
     await Deno.writeFile(fp, enc.encode(script));
   }
 
