@@ -3,9 +3,9 @@
     {
       "protocol": "https",
       "path": "deno.land/std",
-      "version": "v0.51.0",
+      "version": "v0.53.0",
       "files": [
-        "/fmt/sprintf.ts",
+        "/fmt/printf.ts",
         "/http/server.ts",
         "/path/mod.ts"
       ]
