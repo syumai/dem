@@ -1,7 +1,7 @@
 import { Config, validateConfig } from "./config.ts";
 import { Module } from "./module.ts";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
-import { sprintf } from "./vendor/https/deno.land/std/fmt/sprintf.ts";
+import { sprintf } from "./vendor/https/deno.land/std/fmt/printf.ts";
 import { createURL } from "./net.ts";
 
 const vendorDirectoryPath = "vendor";
