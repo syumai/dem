@@ -1,4 +1,4 @@
-// @deno-types='https://dev.jspm.io/typescript@3.9.2/lib/typescript.d.ts';
+// @deno-types='https://dev.jspm.io/typescript@3.9.2/lib/typescript.d.ts'
 import ts from "./vendor/https/dev.jspm.io/typescript/lib/typescript.js";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
 
