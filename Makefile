@@ -22,7 +22,7 @@ test/cmd:
 		dem-local alias https://deno.land/std/examples/welcome.ts welcome.ts && \
 		dem-local ensure && \
 		dem-local prune
-	deno run -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
+	deno run -r -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
 
 	# test unlink / link
 	rm tmp/welcome/mod.ts
@@ -33,7 +33,7 @@ test/cmd:
 		dem-local remove https://deno.land/std && \
 		dem-local add https://deno.land/std@v0.35.0 && \
 		dem-local link https://deno.land/std/examples/welcome.ts
-	deno run -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
+	deno run -r -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
 
 	rm -rf tmp/welcome
 
