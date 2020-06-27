@@ -136,7 +136,7 @@ export class StorageRepository {
       vendorDirectoryPath,
       aliasDirectoryPath,
     );
-    const aliasTargetPath = `./${moduleProtocol}/${modulePath}/${filePath}`;
+    const aliasTargetPath = `./${moduleProtocol}/${modulePath}${filePath}`;
     let script = sprintf('export * from "%s";\n', aliasTargetPath);
     if (hasDefaultExport) {
       script += sprintf('export { default } from "%s";\n', aliasTargetPath);
