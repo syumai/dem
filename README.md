@@ -47,7 +47,7 @@ import { serve } from "./vendor/https/deno.land/std/http/server.ts";
 ## Install
 
 ```sh
-deno install --allow-read --allow-write --allow-net -f -n dem https://deno.land/x/dem@0.9.2/cmd.ts
+deno install --allow-read --allow-write --allow-net -f -n dem https://deno.land/x/dem@0.9.3/cmd.ts
 ```
 
 ## Usage
