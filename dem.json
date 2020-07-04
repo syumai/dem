@@ -3,7 +3,7 @@
     {
       "protocol": "https",
       "path": "deno.land/std",
-      "version": "0.59.0",
+      "version": "0.60.0",
       "files": [
         "/fmt/printf.ts",
         "/http/server.ts",
