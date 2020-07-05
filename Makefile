@@ -3,6 +3,7 @@ TARGET_SRC=$(shell shopt -s globstar && ls ./*.ts | grep -v ./vendor)
 
 lint:
 	deno fmt --check $(TARGET_SRC)
+	deno lint --unstable $(TARGET_SRC)
 
 fmt:
 	deno fmt $(TARGET_SRC)
