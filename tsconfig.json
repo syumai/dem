@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "target": "esnext",
     "strict": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
