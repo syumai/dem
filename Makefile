@@ -19,7 +19,7 @@ test/cmd:
 	echo "import './vendor/welcome.ts'" > tmp/welcome/mod.ts
 	cd tmp/welcome && \
 		dem-local init && \
-		dem-local add https://deno.land/std@v0.59.0 && \
+		dem-local add https://deno.land/std@0.73.0 && \
 		dem-local alias https://deno.land/std/examples/welcome.ts welcome.ts && \
 		dem-local ensure && \
 		dem-local prune
@@ -32,7 +32,7 @@ test/cmd:
 		dem-local unalias welcome.ts && \
 		dem-local unlink https://deno.land/std/examples/welcome.ts && \
 		dem-local remove https://deno.land/std && \
-		dem-local add https://deno.land/std@v0.59.0 && \
+		dem-local add https://deno.land/std@0.73.0 && \
 		dem-local link https://deno.land/std/examples/welcome.ts
 	deno run -r -c ./tsconfig.json tmp/welcome/mod.ts | grep -q 'Welcome to Deno'
 

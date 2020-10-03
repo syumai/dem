@@ -3,7 +3,7 @@
     {
       "protocol": "https",
       "path": "deno.land/std",
-      "version": "0.61.0",
+      "version": "0.73.0",
       "files": [
         "/fmt/printf.ts",
         "/http/server.ts",
@@ -12,8 +12,8 @@
     },
     {
       "protocol": "https",
-      "path": "dev.jspm.io/typescript",
-      "version": "3.9.2",
+      "path": "jspm.dev/typescript",
+      "version": "4.0.3",
       "files": [
         "/lib/typescript.js"
       ]

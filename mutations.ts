@@ -1,15 +1,15 @@
 import {
-  ADD_MODULE,
-  REMOVE_MODULE,
-  ADD_LINK,
-  REMOVE_LINK,
-  ADD_ALIAS,
-  REMOVE_ALIAS,
-  UPDATE_MODULE,
   Action,
+  ADD_ALIAS,
+  ADD_LINK,
+  ADD_MODULE,
+  REMOVE_ALIAS,
+  REMOVE_LINK,
+  REMOVE_MODULE,
+  UPDATE_MODULE,
 } from "./actions.ts";
-import { Store, duplicateStore } from "./store.ts";
-import { Module, moduleEquals, compareModules } from "./module.ts";
+import { duplicateStore, Store } from "./store.ts";
+import { compareModules, Module, moduleEquals } from "./module.ts";
 import { Repository } from "./repository.ts";
 import { createURL } from "./net.ts";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
@@ -49,7 +49,7 @@ to update module, please use 'dem update'.`);
           foundModIndex++;
         }
         if (!foundMod) {
-          throw new Error(`module not found for: ${urlStr}`);
+          throw new Error(`remove module: module not found for: ${urlStr}`);
         }
         modules.splice(foundModIndex, 1);
         break;
@@ -61,7 +61,7 @@ to update module, please use 'dem update'.`);
           return link.startsWith(mod.toString());
         });
         if (!foundMod) {
-          throw new Error(`module not found for: ${link}`);
+          throw new Error(`add link: module not found for: ${link}`);
         }
         const filePath = link.split(foundMod.toString())[1];
         if (foundMod.files.includes(filePath)) {
@@ -77,7 +77,7 @@ to update module, please use 'dem update'.`);
           return link.startsWith(mod.toString());
         });
         if (!foundMod) {
-          throw new Error(`module not found for: ${link}`);
+          throw new Error(`remove link: module not found for: ${link}`);
         }
         const filePath = link.split(foundMod.toString())[1];
         const foundFileIndex = foundMod.files.indexOf(filePath);
@@ -101,7 +101,9 @@ to update module, please use 'dem update'.`);
           return aliasTargetPath.startsWith(mod.toString());
         });
         if (!foundMod) {
-          throw new Error(`module not found for: ${aliasTargetPath}`);
+          throw new Error(
+            `add alias: module not found for: ${aliasTargetPath}`,
+          );
         }
 
         aliases[aliasPath] = aliasTargetPath;
@@ -111,9 +113,7 @@ to update module, please use 'dem update'.`);
       case REMOVE_ALIAS: {
         const { aliasPath } = action.payload;
         if (!aliases[aliasPath]) {
-          throw new Error(
-            `alias does not exist for: ${aliasPath}.`,
-          );
+          throw new Error(`alias does not exist for: ${aliasPath}.`);
         }
         delete aliases[aliasPath];
         break;
@@ -126,7 +126,7 @@ to update module, please use 'dem update'.`);
           return mod.protocol === moduleProtocol && mod.path === modulePath;
         });
         if (!foundMod) {
-          throw new Error(`module not found for: ${urlStr}`);
+          throw new Error(`update module: module not found for: ${urlStr}`);
         }
         foundMod.version = moduleVersion;
         break;
@@ -178,7 +178,7 @@ export async function mutateRepository(
           return link.startsWith(mod.toString());
         });
         if (!foundMod) {
-          throw new Error(`module not found for: ${link}`);
+          throw new Error(`add link: module not found for: ${link}`);
         }
 
         const filePath = link.split(foundMod.toString())[1];
@@ -206,16 +206,12 @@ export async function mutateRepository(
           return link.startsWith(mod.toString());
         });
         if (!foundMod) {
-          throw new Error(`module not found for: ${link}`);
+          throw new Error(`remove link: module not found for: ${link}`);
         }
 
         // create file path
         const filePath = link.split(foundMod.toString())[1];
-        await repository.removeLink(
-          foundMod.protocol,
-          foundMod.path,
-          filePath,
-        );
+        await repository.removeLink(foundMod.protocol, foundMod.path, filePath);
         break;
       }
 
@@ -226,7 +222,9 @@ export async function mutateRepository(
           return aliasTargetPath.startsWith(mod.toString());
         });
         if (!foundMod) {
-          throw new Error(`module not found for: ${aliasTargetPath}`);
+          throw new Error(
+            `add alias: module not found for: ${aliasTargetPath}`,
+          );
         }
 
         const linkedFilePath = aliasTargetPath.split(foundMod.toString())[1];
@@ -260,9 +258,7 @@ export async function mutateRepository(
 
       case REMOVE_ALIAS: {
         const { aliasPath } = action.payload;
-        await repository.removeAlias(
-          aliasPath,
-        );
+        await repository.removeAlias(aliasPath);
         break;
       }
 
@@ -273,7 +269,7 @@ export async function mutateRepository(
           return mod.protocol === moduleProtocol && mod.path === modulePath;
         });
         if (!foundMod) {
-          throw new Error(`module not found for: ${urlStr}`);
+          throw new Error(`update module: module not found for: ${urlStr}`);
         }
 
         for (const filePath of foundMod.files) {

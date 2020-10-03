@@ -1,5 +1,5 @@
-// @deno-types='https://dev.jspm.io/typescript@3.9.2/lib/typescript.d.ts'
-import ts from "./vendor/https/dev.jspm.io/typescript/lib/typescript.js";
+// @deno-types='https://unpkg.com/typescript@4.0.3/lib/typescript.d.ts'
+import ts from "./vendor/https/jspm.dev/typescript/lib/typescript.js";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
 
 const dec = new TextDecoder("utf-8");
@@ -21,7 +21,7 @@ export async function hasDefaultExport(body: string): Promise<boolean> {
   const sourceFile = ts.createSourceFile("", body, ts.ScriptTarget.ES2020);
   let hasDefault = false;
   sourceFile.forEachChild((node: ts.Node) => {
-    hasDefault = hasDefault || (node.kind === ts.SyntaxKind.ExportAssignment);
+    hasDefault = hasDefault || node.kind === ts.SyntaxKind.ExportAssignment;
   });
   return hasDefault;
 }
@@ -31,7 +31,9 @@ function removeQuotes(s: string): string {
 }
 
 const crawlImport = (filePaths: string[], sourceFile: ts.SourceFile) =>
-  (node: ts.Node) => {
+  (
+    node: ts.Node,
+  ) => {
     if (node.kind === ts.SyntaxKind.ImportDeclaration) {
       node.forEachChild((child: ts.Node) => {
         if (child.kind === ts.SyntaxKind.StringLiteral) {
