@@ -2,25 +2,22 @@ const { cwd } = Deno;
 
 import { Module } from "./module.ts";
 import {
-  ADD_MODULE,
-  REMOVE_MODULE,
-  ADD_LINK,
-  REMOVE_LINK,
-  ADD_ALIAS,
-  REMOVE_ALIAS,
-  UPDATE_MODULE,
   Action,
+  ADD_ALIAS,
+  ADD_LINK,
+  ADD_MODULE,
+  REMOVE_ALIAS,
+  REMOVE_LINK,
+  REMOVE_MODULE,
+  UPDATE_MODULE,
 } from "./actions.ts";
-import { mutateStore, mutateRepository } from "./mutations.ts";
+import { mutateRepository, mutateStore } from "./mutations.ts";
 import { Store } from "./store.ts";
 import { Repository } from "./repository.ts";
 import { getFormattedImportFilePaths } from "./ast.ts";
 
 export class App {
-  constructor(
-    public store: Store,
-    private repo: Repository,
-  ) {}
+  constructor(public store: Store, private repo: Repository) {}
 
   async init(): Promise<void> {
     await this.repo.saveConfig({
@@ -235,7 +232,7 @@ export class App {
     try {
       this.store = mutateStore(this.store, removeLinkActions);
     } catch (e) {
-      console.error(e.toString());
+      console.error(e.stack);
       return;
     }
 
@@ -255,19 +252,16 @@ export class App {
     try {
       this.store = mutateStore(this.store, removeModuleActions);
     } catch (e) {
-      console.error(e.toString());
+      console.error(e.stack);
       return;
     }
 
-    const actions: Action[] = [
-      ...removeLinkActions,
-      ...removeModuleActions,
-    ];
+    const actions: Action[] = [...removeLinkActions, ...removeModuleActions];
 
     try {
       await mutateRepository(this.repo, this.store, actions);
     } catch (e) {
-      console.error(e.toString());
+      console.error(e.stack);
       return;
     }
 
@@ -276,8 +270,16 @@ export class App {
   }
 
   async commit(actions: Action[]) {
-    this.store = mutateStore(this.store, actions);
-    await mutateRepository(this.repo, this.store, actions);
+    try {
+      this.store = mutateStore(this.store, actions);
+    } catch (e) {
+      console.error(e.stack);
+    }
+    try {
+      await mutateRepository(this.repo, this.store, actions);
+    } catch (e) {
+      console.error(e.stack);
+    }
     await this.repo.saveConfig(this.store.config);
   }
 }
