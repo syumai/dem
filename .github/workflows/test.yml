@@ -24,7 +24,7 @@ jobs:
       - name: Install dem-local
         run: |
           make install-local
-          echo "::add-path::$HOME/.deno/bin"
+          echo $HOME/.deno/bin >> $GITHUB_PATH
       - name: Run tests
         run: |
           make test
