@@ -1,0 +1,10 @@
+{
+                                "name": "dem",
+                                "description": "A module version manager for Deno.",
+                                "homepage": "https://github.com/syumai/dem",
+                                "files": [
+                                  "./**/*.ts",
+                                  "README.md"
+                                ],
+                                "entry": "./mod.ts"
+                              }
