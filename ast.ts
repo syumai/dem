@@ -8,16 +8,16 @@ export async function hasDefaultExportLocal(
   filePath: string,
 ): Promise<boolean> {
   const body = dec.decode(await Deno.readFile(filePath));
-  return await hasDefaultExport(body);
+  return hasDefaultExport(body);
 }
 
 export async function hasDefaultExportRemote(url: string): Promise<boolean> {
   const res = await fetch(url, { redirect: "follow" });
   const body = await res.text();
-  return await hasDefaultExport(body);
+  return hasDefaultExport(body);
 }
 
-export async function hasDefaultExport(body: string): Promise<boolean> {
+export function hasDefaultExport(body: string): boolean {
   const sourceFile = ts.createSourceFile("", body, ts.ScriptTarget.ES2020);
   let hasDefault = false;
   sourceFile.forEachChild((node: ts.Node) => {
