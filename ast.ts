@@ -1,5 +1,4 @@
-// @deno-types='https://unpkg.com/typescript@4.0.3/lib/typescript.d.ts'
-import ts from "./vendor/https/jspm.dev/typescript/lib/typescript.js";
+import ts from "https://esm.sh/typescript@4.4.2";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
 
 const dec = new TextDecoder("utf-8");

@@ -9,14 +9,6 @@
         "/http/server.ts",
         "/path/mod.ts"
       ]
-    },
-    {
-      "protocol": "https",
-      "path": "jspm.dev/typescript",
-      "version": "4.3.2",
-      "files": [
-        "/lib/typescript.js"
-      ]
     }
   ],
   "aliases": {}
