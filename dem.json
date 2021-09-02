@@ -3,19 +3,11 @@
     {
       "protocol": "https",
       "path": "deno.land/std",
-      "version": "0.101.0",
+      "version": "0.105.0",
       "files": [
         "/fmt/printf.ts",
         "/http/server.ts",
         "/path/mod.ts"
-      ]
-    },
-    {
-      "protocol": "https",
-      "path": "jspm.dev/typescript",
-      "version": "4.0.3",
-      "files": [
-        "/lib/typescript.js"
       ]
     }
   ],
