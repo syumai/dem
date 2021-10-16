@@ -47,7 +47,7 @@ import { serve } from "./vendor/https/deno.land/std/http/server.ts";
 ## Install
 
 ```sh
-deno install --allow-read --allow-write --allow-net -f -n dem https://deno.land/x/dem@0.9.9/cmd.ts
+deno install --allow-read --allow-write --allow-net -f -n dem https://deno.land/x/dem@0.9.10/cmd.ts
 ```
 
 ## Usage
@@ -73,9 +73,9 @@ successfully added new module: https://deno.land/std, version: v0.51.0
 `example.ts`
 
 ```ts
-import * as path from './vendor/https/deno.land/std/fs/path.ts';
+import * as path from "./vendor/https/deno.land/std/fs/path.ts";
 
-console.log(path.join(Deno.cwd(), 'example'));
+console.log(path.join(Deno.cwd(), "example"));
 ```
 
 #### 4. `dem ensure` to resolve modules.
@@ -95,7 +95,7 @@ $ deno example.ts
 
 ### Updating module
 
-* `dem update` updates versions in `dem.json` and linked scripts.
+- `dem update` updates versions in `dem.json` and linked scripts.
 
 ```sh
 $ dem update https://deno.land/std@v0.52.0
@@ -106,15 +106,15 @@ successfully updated module: https://deno.land/std, version: v0.52.0
 
 ### Alias
 
-* With alias, shortened script paths are available.
+- With alias, shortened script paths are available.
 
 `example.ts`
 
 ```ts
 // Original
-import * as dejs from "./vendor/https/deno.land/x/dejs/mod.ts"
+import * as dejs from "./vendor/https/deno.land/x/dejs/mod.ts";
 // With alias
-import * as dejs from "./vendor/dejs.ts"
+import * as dejs from "./vendor/dejs.ts";
 ```
 
 #### How to use alias
@@ -129,7 +129,7 @@ $ dem alias https://deno.land/x/dejs/mod.ts dejs.ts # ./vendor/dejs.ts will be c
 2. import script using alias path
 
 ```ts
-import * as dejs from "./vendor/dejs.ts"
+import * as dejs from "./vendor/dejs.ts";
 ```
 
 3. run `dem ensure`.
