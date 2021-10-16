@@ -1,5 +1,6 @@
-import ts from "https://esm.sh/typescript@4.4.2";
+import jspmts from "https://jspm.dev/typescript@4.3.2";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
+const ts = jspmts as any
 
 const dec = new TextDecoder("utf-8");
 
@@ -19,7 +20,7 @@ export async function hasDefaultExportRemote(url: string): Promise<boolean> {
 export function hasDefaultExport(body: string): boolean {
   const sourceFile = ts.createSourceFile("", body, ts.ScriptTarget.ES2020);
   let hasDefault = false;
-  sourceFile.forEachChild((node: ts.Node) => {
+  sourceFile.forEachChild((node: any) => {
     hasDefault = hasDefault || node.kind === ts.SyntaxKind.ExportAssignment;
   });
   return hasDefault;
@@ -29,12 +30,12 @@ function removeQuotes(s: string): string {
   return s.replace(/[\'\"\`]/g, "");
 }
 
-const crawlImport = (filePaths: string[], sourceFile: ts.SourceFile) =>
+const crawlImport = (filePaths: string[], sourceFile: any) =>
   (
-    node: ts.Node,
+    node: any,
   ) => {
     if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-      node.forEachChild((child: ts.Node) => {
+      node.forEachChild((child: any) => {
         if (child.kind === ts.SyntaxKind.StringLiteral) {
           filePaths.push(removeQuotes(child.getText(sourceFile)));
         }
