@@ -1,6 +1,6 @@
 import jspmts from "https://jspm.dev/typescript@4.3.2";
 import * as path from "./vendor/https/deno.land/std/path/mod.ts";
-const ts = jspmts as any
+const ts = jspmts as any;
 
 const dec = new TextDecoder("utf-8");
 
